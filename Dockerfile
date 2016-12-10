@@ -32,7 +32,7 @@ COPY run ${FLYWHEEL}/run
 COPY manifest.json ${FLYWHEEL}/manifest.json
 
 # Add code to determine measurement from dicom descrip (label)
-ADD https://raw.githubusercontent.com/scitran/utilities/0deeda8e123f27545c9291f1f9d7c4d0a89c8e2f/measurement_from_label.py ${FLYWHEEL}/measurement_from_label.py
+ADD https://raw.githubusercontent.com/scitran/utilities/1b8fc44de2d4695ce2820b267e493dd57d5bc99a/measurement_from_label.py ${FLYWHEEL}/measurement_from_label.py
 
 # Copy classifier code into place
 COPY dicom-mr-classifier.py ${FLYWHEEL}/dicom-mr-classifier.py
