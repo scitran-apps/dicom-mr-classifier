@@ -14,7 +14,8 @@
 	"inputs": {
 		"dicom": {
 			"base": "file",
-			"type": { "enum": [ "dicom" ] }
+			"type": { "enum": [ "dicom" ] },
+			"description": "Archive (.zip) containing DICOM files."
 		}
 	},
 	"custom": {
