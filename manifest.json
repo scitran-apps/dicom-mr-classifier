@@ -18,6 +18,6 @@
 		}
 	},
 	"custom": {
-		"docker-image": "scitran/dicom-mr-classifier"
+		"docker-image": "scitran/dicom-mr-classifier:v0.1.8"
 	}
 }
