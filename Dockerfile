@@ -35,8 +35,8 @@ RUN mkdir -p ${FLYWHEEL}
 COPY run ${FLYWHEEL}/run
 COPY manifest.json ${FLYWHEEL}/manifest.json
 
-# Add code to determine measurement from dicom descrip (label)
-COPY measurement-from-label.py ${FLYWHEEL}/measurement_from_label.py
+# Add code to determine classification from dicom descrip (label)
+COPY classification_from_label.py ${FLYWHEEL}/classification_from_label.py
 
 # Copy classifier code into place
 COPY dicom-mr-classifier.py ${FLYWHEEL}/dicom-mr-classifier.py

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Infer acquisition measurement type by parsing the description label.
+Infer acquisition classification by parsing the description label.
 
 
 Example usage:
@@ -245,52 +245,60 @@ def is_spectroscopy(label):
 
 
 # Call all functions to determine new label
-def infer_measurement(label):
+def infer_classification(label):
     if not label:
-        return 'unknown'
+        return {}
     else:
+        classification = {}
         if is_anatomy_inplane(label):
-            measurement = 'anatomy_inplane'
+            classification['Intent'] = ['Structural']
+            classification['Contrast'] = ['T1']
+            classification['Features'] = ['Inplane']
         elif is_fieldmap(label):
-            measurement = 'field_map'
+            classification['Intent'] = ['Fieldmap']
+            classification['Contrast'] = ['B0']
         elif is_diffusion_derived(label):
-            measurement = 'diffusion_map'
+            classification['Custom'] = ['Diffusion-Map']
         elif is_diffusion(label):
-            measurement = 'diffusion'
-        elif is_fieldmap(label):
-            measurement = 'field_map'
+            classification['Intent'] = ['Structural']
+            classification['Contrast'] = ['Diffusion']
         elif is_functional_derived(label):
-            measurement = 'functional_map'
+            classification['Custom'] = ['Functional-Map']
         elif is_functional(label):
-            measurement = 'functional'
+            classification['Intent'] = ['Functional']
+            classification['Contrast'] = ['T2*']
         elif is_anatomy_t1(label):
-            measurement = 'anatomy_t1w'
+            classification['Intent'] = ['Structural']
+            classification['Contrast'] = ['T1']
         elif is_anatomy_t2(label):
-            measurement = 'anatomy_t2w'
+            classification['Intent'] = ['Structural']
+            classification['Contrast'] = ['T2']
         elif is_anatomy(label):
-            measurement = 'anatomy_ir'
+            classification['Intent'] = ['Structural']
+            classification['Contrast'] = ['T1']
         elif is_localizer(label):
-            measurement = 'localizer'
+            classification['Intent'] = ['Localizer']
+            classification['Contrast'] = ['T2']
         elif is_shim(label):
-            measurement = 'high_order_shim'
+            classification['Intent'] = ['Shim']
         elif is_calibration(label):
-            measurement = 'calibration'
+            classification['Intent'] = ['Calibration']
         elif is_coil_survey(label):
-            measurement = 'coil_survey'
+            classification['Intent'] = ['Calibration']
+            classification['Contrast'] = ['B1']
         elif is_proton_density(label):
-            measurement = 'anatomy_pd'
+            classification['Intent'] = ['Structural']
+            classification['Contrast'] = ['PD']
         elif is_perfusion(label):
-            measurement = 'perfusion'
+            classification['Intent'] = ['Structural']
+            classification['Contrast'] = ['Perfusion']
         elif is_spectroscopy(label):
-            measurement = 'spectroscopy'
+            classification['Contrast'] = ['Spectroscopy']
         elif is_phase_map(label):
-            measurement = 'phase_map'
+            classification['Custom'] = ['Phase Map']
         elif is_screenshot(label):
-            measurement = 'screenshot'
+            classification['Intent'] = ['Screenshot']
         else:
-            measurement = 'unknown'
+            print label.strip('\n') + ' --->>>> unknown'
 
-    # Check the measurement
-    if measurement == 'unknown':
-        print label.strip('\n') + ' --->>>> ' + measurement
-    return measurement
+    return classification 

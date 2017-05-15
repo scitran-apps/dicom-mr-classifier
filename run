@@ -38,6 +38,7 @@ dpkg-reconfigure -f noninteractive tzdata
 ##############################################################################
 # Check I/O directories and Generate metadata
 
+# Check that /output directory is empty
 if [ "-d" "$OUTPUT_DIR" ]
     then
         if [ "$(ls -A $OUTPUT_DIR)" ]; then
