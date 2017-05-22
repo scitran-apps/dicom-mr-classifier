@@ -197,7 +197,7 @@ def dicom_classify(zip_file_path, outbase, timezone):
         try:
             age = parse_patient_age(dcm.get('PatientAge'))
             if age:
-                metadata['session']['subject']['age'] = age
+                metadata['session']['subject']['age'] = int(age)
         except:
             pass
     if hasattr(dcm, 'PatientName') and dcm.get('PatientName').given_name:
