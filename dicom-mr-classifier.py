@@ -164,18 +164,22 @@ def dicom_classify(zip_file_path, outbase, timezone):
     exclude_types = [dicom.sequence.Sequence]
     tags = dcm.dir()
     for tag in tags:
-        if (tag not in exclude_tags) and (type(dcm.get(tag)) not in exclude_types):
-            value = assign_type(dcm.get(tag))
-            if value:
-                # Put the value in the header
-                if type(value) == str and len(value) < 10240: # Max dicom field length
-                    header[tag] = value
-                elif type(value) in types:
-                    header[tag] = value
+        try:
+            if (tag not in exclude_tags) and (type(dcm.get(tag)) not in exclude_types):
+                value = assign_type(dcm.get(tag))
+                if value or value == 0: # Some values are zero
+                    # Put the value in the header
+                    if type(value) == str and len(value) < 10240: # Max dicom field length
+                        header[tag] = value
+                    elif type(value) in types:
+                        header[tag] = value
+                    else:
+                        log.debug('Excluding ' + tag)
                 else:
                     log.debug('Excluding ' + tag)
-            else:
-                log.debug('Excluding ' + tag)
+        except:
+            log.debug('Failed to get ' + tag)
+            pass
     log.info('done')
 
     # Build metadata
