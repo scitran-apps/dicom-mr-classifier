@@ -352,22 +352,28 @@ def dicom_classify(zip_file_path, outbase, timezone):
     # Acquisition metadata
     metadata['acquisition'] = {}
     if hasattr(dcm, 'Modality') and dcm.get('Modality'):
-        metadata['acquisition']['modality'] = dcm.get('Modality')
+        metadata['acquisition']['instrument'] = dcm.get('Modality')
     if hasattr(dcm, 'SeriesDescription') and dcm.get('SeriesDescription'):
         metadata['acquisition']['label'] = dcm.get('SeriesDescription')
         # File Classification
         dicom_file['classification'] = classification_from_label.infer_classification(dcm.get('SeriesDescription'))
+    # If no pixel data present, make classification intent "Non-Image"
+    if not hasattr(dcm, 'PixelData'):
+        nonimage_intent = {'Intent': ['Non-Image']}
+        # If classification is a dict, update dict with intent
+        if isinstance(dicom_file['classification'], dict):
+            dicom_file['classification'].update(nonimage_intent)
+        # Else classification is a list, assign dict with intent
+        else:
+            dicom_file['classification'] = nonimage_intent
     if acquisition_timestamp:
         metadata['acquisition']['timestamp'] = acquisition_timestamp
 
     # Acquisition metadata from dicom header
-    dicom_file['info'] = {}
-    if header:
-        dicom_file['info'] = header
+    dicom_file['info'] = get_dicom_header(dcm)
 
     # Append the dicom_file to the files array
-    metadata['files'] = []
-    metadata['files'].append(dicom_file)
+    metadata['acquisition']['files'] = [dicom_file]
 
     # Acquisition metadata from dicom header
     metadata['acquisition']['metadata'] = get_dicom_header(dcm)
