@@ -235,6 +235,9 @@ def dicom_classify(zip_file_path, outbase, timezone):
         metadata['acquisition']['measurement'] = measurement_from_label.infer_measurement(dcm.get('SeriesDescription'))
     else:
         metadata['acquisition']['measurement'] = 'unknown'
+    # If no pixel data present, make measurement "non-image"
+    if not hasattr(dcm, 'PixelData'):
+        metadata['acquisition']['measurement'] = 'non-image'
     if acquisition_timestamp:
         metadata['acquisition']['timestamp'] = acquisition_timestamp
 
