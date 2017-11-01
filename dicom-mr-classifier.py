@@ -6,6 +6,7 @@ import json
 import pytz
 import dicom
 import string
+import tzlocal
 import logging
 import zipfile
 import datetime
@@ -13,6 +14,19 @@ import measurement_from_label
 
 logging.basicConfig()
 log = logging.getLogger('dicom-mr-classifier')
+
+
+def validate_timezone(zone):
+    # pylint: disable=missing-docstring
+    if zone is None:
+        zone = tzlocal.get_localzone()
+    else:
+        try:
+            zone = pytz.timezone(zone.zone)
+        except pytz.UnknownTimeZoneError:
+            zone = None
+    return zone
+
 
 def parse_patient_age(age):
     """
@@ -44,13 +58,16 @@ def parse_patient_age(age):
 
     return age_in_seconds
 
+
 def timestamp(date, time, timezone):
     """
     Return datetime formatted string
     """
-    if date and time:
-        return datetime.datetime.strptime(date + time[:6], '%Y%m%d%H%M%S')
+    if date and time and timezone:
+        # return datetime.datetime.strptime(date + time[:6], '%Y%m%d%H%M%S')
+        return timezone.localize(datetime.datetime.strptime(date + time[:6], '%Y%m%d%H%M%S'), timezone)
     return None
+
 
 def get_timestamp(dcm, timezone):
     """
@@ -81,17 +98,20 @@ def get_timestamp(dcm, timezone):
 
     if session_timestamp:
         if session_timestamp.tzinfo is None:
+            log.info('no tzinfo found, attempting to localize session timestamp...')
             session_timestamp = pytz.timezone('UTC').localize(session_timestamp)
         session_timestamp = session_timestamp.isoformat()
     else:
         session_timestamp = ''
     if acquisition_timestamp:
         if acquisition_timestamp.tzinfo is None:
+            log.info('no tzinfo found, attempting to localize acquisition_timestamp timestamp...')
             acquisition_timestamp = pytz.timezone('UTC').localize(acquisition_timestamp)
         acquisition_timestamp = acquisition_timestamp.isoformat()
     else:
         acquisition_timestamp = ''
     return session_timestamp, acquisition_timestamp
+
 
 def get_sex_string(sex_str):
     """
@@ -104,6 +124,7 @@ def get_sex_string(sex_str):
     else:
         sex = ''
     return sex
+
 
 def assign_type(s):
     """
@@ -120,6 +141,7 @@ def assign_type(s):
                 return float(s)
             except ValueError:
                 return format_string(s)
+
 
 def format_string(in_string):
     formatted = re.sub(r'[^\x00-\x7f]',r'', str(in_string)) # Remove non-ascii characters
@@ -147,16 +169,23 @@ def dicom_classify(zip_file_path, outbase, timezone):
         log.info('setting outbase to %s' % outbase)
 
     # Extract the last file in the zip to /tmp/ and read it
+    dcm = []
     zip = zipfile.ZipFile(zip_file_path)
     for n in range((len(zip.namelist()) -1), -1, -1):
         dcm_path = zip.extract(zip.namelist()[n], '/tmp')
         if os.path.isfile(dcm_path):
             try:
+                log.info('reading %s' % dcm_path)
                 dcm = dicom.read_file(dcm_path)
                 break
             except:
                 pass
+        else:
+            log.warning('%s does not exist!' % dcm_path)
 
+    if not dcm:
+        log.warning('dcm is empty!!!')
+        os.sys.exit(1)
     # Extract the header values
     header = {}
     exclude_tags = ['[Unknown]', 'PixelData', 'Pixel Data',  '[User defined data]', '[Protocol Data Block (compressed)]', '[Histogram tables]', '[Unique image iden]']
@@ -253,6 +282,7 @@ def dicom_classify(zip_file_path, outbase, timezone):
 
     return metafile_outname
 
+
 if __name__ == '__main__':
     """
     Generate session, subject, and acquisition metatada by parsing the dicom header, using pydicom.
@@ -262,12 +292,13 @@ if __name__ == '__main__':
     ap.add_argument('dcmzip', help='path to dicom zip')
     ap.add_argument('outbase', nargs='?', help='outfile name prefix')
     ap.add_argument('--log_level', help='logging level', default='info')
-    ap.add_argument('-z', '--timezone', help='instrument timezone [system timezone]', default=None)
     args = ap.parse_args()
 
     log.setLevel(getattr(logging, args.log_level.upper()))
     logging.getLogger('sctran.data').setLevel(logging.INFO)
     log.info('start: %s' % datetime.datetime.utcnow())
+
+    args.timezone = validate_timezone(tzlocal.get_localzone())
 
     metadatafile = dicom_classify(args.dcmzip, args.outbase, args.timezone)
 

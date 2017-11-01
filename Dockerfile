@@ -22,8 +22,14 @@ RUN apt-get update && apt-get -y install \
 
 # Install scitran.data dependencies
 RUN pip install \
-    pytz \
-    pydicom
+  pydicom==0.9.9 \
+  python-dateutil==2.6.0 \
+  pytz==2017.2 \
+  tzlocal==1.4
+
+# Set Time Zone
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Make directory for flywheel spec (v0)
 ENV FLYWHEEL /flywheel/v0
