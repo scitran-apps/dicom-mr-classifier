@@ -98,14 +98,14 @@ def get_timestamp(dcm, timezone):
 
     if session_timestamp:
         if session_timestamp.tzinfo is None:
-            log.info('no tzinfo found, attempting to localize session timestamp...')
+            log.info('no tzinfo found, using UTC...')
             session_timestamp = pytz.timezone('UTC').localize(session_timestamp)
         session_timestamp = session_timestamp.isoformat()
     else:
         session_timestamp = ''
     if acquisition_timestamp:
         if acquisition_timestamp.tzinfo is None:
-            log.info('no tzinfo found, attempting to localize acquisition_timestamp timestamp...')
+            log.info('no tzinfo found, using UTC')
             acquisition_timestamp = pytz.timezone('UTC').localize(acquisition_timestamp)
         acquisition_timestamp = acquisition_timestamp.isoformat()
     else:
