@@ -4,11 +4,39 @@
 
 CONTAINER="[ scitran/dicom-mr-classifier ]"
 
-FLYWHEEL_BASE=/flywheel/v0
 
-# Make sure that /output directory is empty (all content will be removed later).
+##############################################################################
+# Configure paths
+
+FLYWHEEL_BASE=/flywheel/v0
 OUTPUT_DIR=$FLYWHEEL_BASE/output
 INPUT_DIR=$FLYWHEEL_BASE/input/dicom
+CONFIG_FILE=$FLYWHEEL_BASE/config.json
+MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
+
+
+##############################################################################
+# Parse configuration
+
+if [[ -f $CONFIG_FILE ]]; then
+  eval $(jq -r '.config | to_entries[] | "config_\(.key)=\(.value)"' $CONFIG_FILE)
+else
+  CONFIG_FILE=$MANIFEST_FILE
+  eval $(jq -r '.config | to_entries[] | "config_\(.key)=\(.value.default)"' $CONFIG_FILE)
+fi
+
+
+##############################################################################
+# Set Time Zone
+
+TZ="${config_timezone}"
+echo "${CONTAINER}  Setting time zone to: $TZ"
+echo "$TZ" > /etc/timezone && ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime
+dpkg-reconfigure -f noninteractive tzdata
+
+
+##############################################################################
+# Check I/O directories and Generate metadata
 
 if [ "-d" "$OUTPUT_DIR" ]
     then
@@ -22,8 +50,7 @@ if [ "-d" "$OUTPUT_DIR" ]
 fi
 
 
-# Check if the inputs are empty.
-# If so, show example usage and prompt for help
+# Check for input
 if [[ -z $@ ]]
     then
       input_file=`find $INPUT_DIR -type f -name "*.zip*" | head -1`
@@ -41,9 +68,10 @@ else
 fi
 
 
-# Get a list of the files in the output directory
-outputs=`find $OUTPUT_DIR -type f -name ".metadata.json"`
+##############################################################################
+# Check for outputs and exit
 
+outputs=`find $OUTPUT_DIR -type f -name ".metadata.json"`
 
 # If outputs exist, then go on...
 if [[ -z $outputs ]]
@@ -56,5 +84,3 @@ if [[ -z $outputs ]]
 fi
 
 exit 0
-
-
