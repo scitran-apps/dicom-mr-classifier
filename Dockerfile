@@ -20,7 +20,6 @@ RUN apt-get update && apt-get -y install \
     python-pip \
     jq
 
-
 # Install scitran.data dependencies
 RUN pip install \
   pydicom==0.9.9 \
@@ -35,7 +34,7 @@ COPY run ${FLYWHEEL}/run
 COPY manifest.json ${FLYWHEEL}/manifest.json
 
 # Add code to determine measurement from dicom descrip (label)
-ADD https://raw.githubusercontent.com/scitran/utilities/4f1f7ca979a50ffe44cfa94c894426dbf028b98a/measurement_from_label.py ${FLYWHEEL}/measurement_from_label.py
+COPY measurement-from-label.py ${FLYWHEEL}/measurement_from_label.py
 
 # Copy classifier code into place
 COPY dicom-mr-classifier.py ${FLYWHEEL}/dicom-mr-classifier.py
