@@ -2,4 +2,4 @@
 [![Docker Stars](https://img.shields.io/docker/stars/scitran/dicom-mr-classifier.svg)](https://hub.docker.com/r/scitran/dicom-mr-classifier/)
 
 # scitran/dicom-mr-classifier
-Extract metadata from raw DICOM data from Siemens, Philips, or GE.
+Extract DICOM header metadata and determine measurement classification. Works with Siemens, Philips, and GE DICOM data.
