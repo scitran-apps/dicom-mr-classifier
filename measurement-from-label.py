@@ -86,6 +86,7 @@ def is_functional(label):
     regexes = [
         re.compile('functional', re.IGNORECASE),
         re.compile('fmri', re.IGNORECASE),
+        re.compile('func', re.IGNORECASE),
         re.compile('bold', re.IGNORECASE),
         re.compile('resting', re.IGNORECASE),
         re.compile('(?=.*rest)(?=.*state)', re.IGNORECASE),
@@ -107,7 +108,10 @@ def is_functional(label):
         re.compile('ep2d', re.IGNORECASE),
         re.compile('_task_', re.IGNORECASE),
         re.compile('_rest_', re.IGNORECASE),
-        re.compile('fBIRN', re.IGNORECASE)
+        re.compile('fBIRN', re.IGNORECASE),
+        re.compile('^Curiosity', re.IGNORECASE),
+        re.compile('^DD_', re.IGNORECASE),
+        re.compile('^Poke', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -116,7 +120,8 @@ def is_functional_derived(label):
     regexes = [
         re.compile('mocoseries', re.IGNORECASE),
         re.compile('GLM$', re.IGNORECASE),
-        re.compile('t-map', re.IGNORECASE)
+        re.compile('t-map', re.IGNORECASE),
+        re.compile('design', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -132,7 +137,8 @@ def is_localizer(label):
         re.compile('(?=.*plane)(?=.*survey)', re.IGNORECASE),
         re.compile('3-plane', re.IGNORECASE),
         re.compile('^loc*', re.IGNORECASE),
-        re.compile('Scout', re.IGNORECASE)
+        re.compile('Scout', re.IGNORECASE),
+        re.compile('AdjGre', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -149,7 +155,9 @@ def is_shim(label):
 # Fieldmap
 def is_fieldmap(label):
     regexes = [
-        re.compile('(?=.*field)(?=.*map)', re.IGNORECASE)
+        re.compile('(?=.*field)(?=.*map)', re.IGNORECASE),
+        re.compile('(?=.*bias)(?=.*ch)', re.IGNORECASE),
+        re.compile('field', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -174,7 +182,10 @@ def is_perfusion(label):
     regexes = [
         re.compile('asl', re.IGNORECASE),
         re.compile('(?=.*blood)(?=.*flow)', re.IGNORECASE),
-        re.compile('(?=.*art)(?=.*spin)', re.IGNORECASE)
+        re.compile('(?=.*art)(?=.*spin)', re.IGNORECASE),
+        re.compile('tof', re.IGNORECASE),
+        re.compile('perfusion', re.IGNORECASE),
+        re.compile('angio', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -182,7 +193,9 @@ def is_perfusion(label):
 def is_proton_density(label):
     regexes = [
         re.compile('^PD$'),
-        re.compile('(?=.*proton)(?=.*density)', re.IGNORECASE)
+        re.compile('(?=.*proton)(?=.*density)', re.IGNORECASE),
+        re.compile('pd_'),
+        re.compile('_pd')
         ]
     return regex_search_label(regexes, label)
 
@@ -212,11 +225,16 @@ def regex_search_label(regexes, label):
     else:
             return False
 
-#######TODO#######
-
 # Spectroscopy
 def is_spectroscopy(label):
-    pass
+    regexes = [
+        re.compile('mip', re.IGNORECASE),
+        re.compile('mrs', re.IGNORECASE),
+        re.compile('svs', re.IGNORECASE),
+        re.compile('GABA', re.IGNORECASE),
+        re.compile('csi', re.IGNORECASE)
+        ]
+    return regex_search_label(regexes, label)
 
 
 # Call all functions to determine new label
