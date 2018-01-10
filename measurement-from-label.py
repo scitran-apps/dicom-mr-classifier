@@ -25,7 +25,8 @@ import re
 # Anatomy, T1
 def is_anatomy_t1(label):
     regexes = [
-        re.compile('(?=.*t1)(?![inplane])(?![rest])', re.IGNORECASE),
+        re.compile('t1', re.IGNORECASE),
+        re.compile('t1w', re.IGNORECASE),
         re.compile('(?=.*3d anat)(?![inplane])', re.IGNORECASE),
         re.compile('(?=.*3d)(?=.*bravo)(?![inplane])', re.IGNORECASE),
         re.compile('spgr', re.IGNORECASE),
@@ -87,7 +88,6 @@ def is_functional(label):
         re.compile('functional', re.IGNORECASE),
         re.compile('fmri', re.IGNORECASE),
         re.compile('func', re.IGNORECASE),
-        re.compile('rest', re.IGNORECASE),
         re.compile('bold', re.IGNORECASE),
         re.compile('resting', re.IGNORECASE),
         re.compile('(?=.*rest)(?=.*state)', re.IGNORECASE),
@@ -107,12 +107,13 @@ def is_functional(label):
         re.compile('conscious', re.IGNORECASE),
         re.compile('^REST$'),
         re.compile('ep2d', re.IGNORECASE),
-        re.compile('_task_', re.IGNORECASE),
-        re.compile('_rest_', re.IGNORECASE),
+        re.compile('task', re.IGNORECASE),
+        re.compile('rest', re.IGNORECASE),
         re.compile('fBIRN', re.IGNORECASE),
         re.compile('^Curiosity', re.IGNORECASE),
         re.compile('^DD_', re.IGNORECASE),
-        re.compile('^Poke', re.IGNORECASE)
+        re.compile('^Poke', re.IGNORECASE),
+        re.compile('^Effort', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -122,7 +123,8 @@ def is_functional_derived(label):
         re.compile('mocoseries', re.IGNORECASE),
         re.compile('GLM$', re.IGNORECASE),
         re.compile('t-map', re.IGNORECASE),
-        re.compile('design', re.IGNORECASE)
+        re.compile('design', re.IGNORECASE),
+        re.compile('StartFMRI', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -158,7 +160,8 @@ def is_fieldmap(label):
     regexes = [
         re.compile('(?=.*field)(?=.*map)', re.IGNORECASE),
         re.compile('(?=.*bias)(?=.*ch)', re.IGNORECASE),
-        re.compile('field', re.IGNORECASE)
+        re.compile('field', re.IGNORECASE),
+        re.compile('DISTORTION', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -186,7 +189,7 @@ def is_perfusion(label):
         re.compile('(?=.*art)(?=.*spin)', re.IGNORECASE),
         re.compile('tof', re.IGNORECASE),
         re.compile('perfusion', re.IGNORECASE),
-        re.compile('angio', re.IGNORECASE)
+        re.compile('angio', re.IGNORECASE),
         ]
     return regex_search_label(regexes, label)
 
@@ -249,24 +252,24 @@ def infer_measurement(label):
             measurement = 'diffusion_map'
         elif is_diffusion(label):
             measurement = 'diffusion'
+        elif is_fieldmap(label):
+            measurement = 'field_map'
+        elif is_functional_derived(label):
+            measurement = 'functional_map'
+        elif is_functional(label):
+            measurement = 'functional'
         elif is_anatomy_t1(label):
             measurement = 'anatomy_t1w'
         elif is_anatomy_t2(label):
             measurement = 'anatomy_t2w'
         elif is_anatomy(label):
             measurement = 'anatomy_ir'
-        elif is_functional(label):
-            measurement = 'functional'
         elif is_localizer(label):
             measurement = 'localizer'
-        elif is_fieldmap(label):
-            measurement = 'field_map'
         elif is_shim(label):
             measurement = 'high_order_shim'
         elif is_calibration(label):
             measurement = 'calibration'
-        elif is_functional_derived(label):
-            measurement = 'functional_map'
         elif is_coil_survey(label):
             measurement = 'coil_survey'
         elif is_proton_density(label):
