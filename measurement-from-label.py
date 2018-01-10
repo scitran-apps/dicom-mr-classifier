@@ -25,7 +25,7 @@ import re
 # Anatomy, T1
 def is_anatomy_t1(label):
     regexes = [
-        re.compile('(?=.*t1)(?![inplane])', re.IGNORECASE),
+        re.compile('(?=.*t1)(?![inplane])(?![rest])', re.IGNORECASE),
         re.compile('(?=.*3d anat)(?![inplane])', re.IGNORECASE),
         re.compile('(?=.*3d)(?=.*bravo)(?![inplane])', re.IGNORECASE),
         re.compile('spgr', re.IGNORECASE),
@@ -87,6 +87,7 @@ def is_functional(label):
         re.compile('functional', re.IGNORECASE),
         re.compile('fmri', re.IGNORECASE),
         re.compile('func', re.IGNORECASE),
+        re.compile('rest', re.IGNORECASE),
         re.compile('bold', re.IGNORECASE),
         re.compile('resting', re.IGNORECASE),
         re.compile('(?=.*rest)(?=.*state)', re.IGNORECASE),
