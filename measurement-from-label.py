@@ -248,6 +248,8 @@ def infer_measurement(label):
     else:
         if is_anatomy_inplane(label):
             measurement = 'anatomy_inplane'
+        elif is_fieldmap(label):
+            measurement = 'field_map'
         elif is_diffusion_derived(label):
             measurement = 'diffusion_map'
         elif is_diffusion(label):
