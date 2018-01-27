@@ -15,6 +15,19 @@ import measurement_from_label
 logging.basicConfig()
 log = logging.getLogger('dicom-mr-classifier')
 
+def get_session_label(dcm):
+    """
+    Switch on manufacturer and either pull out the StudyID or the StudyInstanceUID
+    """
+    session_label = ''
+
+    if dcm.get('Manufacturer').find('GE') != -1 and dcm.has_key('StudyID'):
+        session_label = dcm.get('StudyID')
+    else:
+        session_label = dcm.get('StudyInstanceUID')
+
+    return session_label
+
 
 def validate_timezone(zone):
     # pylint: disable=missing-docstring
@@ -221,6 +234,9 @@ def dicom_classify(zip_file_path, outbase, timezone):
         metadata['session']['timestamp'] = session_timestamp
     if hasattr(dcm, 'OperatorsName') and dcm.get('OperatorsName'):
         metadata['session']['operator'] = dcm.get('OperatorsName')
+    session_label = get_session_label(dcm)
+    if session_label:
+        metadata['session']['label'] = session_label
 
     # Subject Metadata
     metadata['session']['subject'] = {}
