@@ -162,6 +162,7 @@ def is_fieldmap(label):
         re.compile('(?=.*bias)(?=.*ch)', re.IGNORECASE),
         re.compile('field', re.IGNORECASE),
         re.compile('fmap', re.IGNORECASE),
+        re.compile('topup', re.IGNORECASE),
         re.compile('DISTORTION', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
