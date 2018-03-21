@@ -213,7 +213,10 @@ def get_dicom_header(dcm):
                     log.debug('No value found for tag: ' + tag)
 
             if type(dcm.get(tag)) == dicom.sequence.Sequence:
-                header[tag] = get_seq_data(dcm.get(tag), exclude_tags)
+                seq_data = get_seq_data(dcm.get(tag), exclude_tags)
+                # Check that the sequence is not empty
+                if seq_data:
+                    header[tag] = seq_data
         except:
             log.debug('Failed to get ' + tag)
             pass
