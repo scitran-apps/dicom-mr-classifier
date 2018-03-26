@@ -244,18 +244,23 @@ def dicom_classify(zip_file_path, outbase, timezone):
 
     # Extract the last file in the zip to /tmp/ and read it
     dcm = []
-    zip = zipfile.ZipFile(zip_file_path)
-    for n in range((len(zip.namelist()) -1), -1, -1):
-        dcm_path = zip.extract(zip.namelist()[n], '/tmp')
-        if os.path.isfile(dcm_path):
-            try:
-                log.info('reading %s' % dcm_path)
-                dcm = dicom.read_file(dcm_path)
-                break
-            except:
-                pass
-        else:
-            log.warning('%s does not exist!' % dcm_path)
+    if zipfile.is_zipfile(zip_file_path):
+        zip = zipfile.ZipFile(zip_file_path)
+        for n in range((len(zip.namelist()) -1), -1, -1):
+            dcm_path = zip.extract(zip.namelist()[n], '/tmp')
+            if os.path.isfile(dcm_path):
+                try:
+                    log.info('reading %s' % dcm_path)
+                    dcm = dicom.read_file(dcm_path)
+                    break
+                except:
+                    pass
+            else:
+                log.warning('%s does not exist!' % dcm_path)
+    else:
+        log.info('Not a zip. Attempting to read %s directly' % os.path.basename(zip_file_path))
+        dcm = dicom.read_file(zip_file_path)
+
 
     if not dcm:
         log.warning('dcm is empty!!!')

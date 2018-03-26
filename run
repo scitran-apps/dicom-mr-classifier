@@ -41,8 +41,7 @@ dpkg-reconfigure -f noninteractive tzdata
 if [ "-d" "$OUTPUT_DIR" ]
     then
         if [ "$(ls -A $OUTPUT_DIR)" ]; then
-            echo -e "$CONTAINER  $OUTPUT_DIR is not Empty! Please provide an empty directory and mount at '$OUTPUT_DIR'."
-            exit 1
+            echo -e "$CONTAINER  Warning $OUTPUT_DIR is not Empty! Results may be overwritten."
         fi
     else
         echo -e "$CONTAINER  $OUTPUT_DIR not found. It will be created."
@@ -54,6 +53,11 @@ fi
 if [[ -z $@ ]]
     then
       input_file=`find $INPUT_DIR -type f -name "*.zip*" | head -1`
+      # Check for non-zipped files
+      if [[ -z $input_file ]]; then
+        input_file=`find $INPUT_DIR -type f -not -path '*/\.*' | head -1`
+      fi
+
       if [[ -n $input_file ]]
         then
             bni=`basename "$input_file"`
