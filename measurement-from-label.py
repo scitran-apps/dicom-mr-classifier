@@ -163,7 +163,8 @@ def is_fieldmap(label):
         re.compile('field', re.IGNORECASE),
         re.compile('fmap', re.IGNORECASE),
         re.compile('topup', re.IGNORECASE),
-        re.compile('DISTORTION', re.IGNORECASE)
+        re.compile('DISTORTION', re.IGNORECASE),
+        re.compile('se[-_][aprl]{2}$', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
