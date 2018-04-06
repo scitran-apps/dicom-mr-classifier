@@ -258,7 +258,9 @@ def infer_classification(label):
             classification['Intent'] = ['Fieldmap']
             classification['Contrast'] = ['B0']
         elif is_diffusion_derived(label):
-            classification['Custom'] = ['Diffusion-Map']
+            classification['Intent'] = ['Structural']
+            classification['Contrast'] = ['Diffusion']
+            classification['Features'] = ['Derived']
         elif is_diffusion(label):
             classification['Intent'] = ['Structural']
             classification['Contrast'] = ['Diffusion']
