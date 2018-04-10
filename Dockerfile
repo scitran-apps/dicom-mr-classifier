@@ -17,6 +17,7 @@ MAINTAINER Michael Perry <lmperry@stanford.edu>
 # Install dependencies
 RUN apt-get update && apt-get -y install \
     python \
+    python-dev \
     python-pip \
     jq
 
@@ -25,7 +26,8 @@ RUN pip install \
   pydicom==0.9.9 \
   python-dateutil==2.6.0 \
   pytz==2017.2 \
-  tzlocal==1.4
+  tzlocal==1.4 \
+  nibabel==2.2.1
 
 # Make directory for flywheel spec (v0)
 ENV FLYWHEEL /flywheel/v0

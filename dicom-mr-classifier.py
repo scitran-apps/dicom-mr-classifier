@@ -151,7 +151,7 @@ def assign_type(s):
             try:
                 return [ float(x) for x in s ]
             except ValueError:
-                return s
+                return [ format_string(x) for x in s if len(x) > 0 ]
     else:
         s = str(s)
         try:
@@ -221,6 +221,36 @@ def get_dicom_header(dcm):
             log.debug('Failed to get ' + tag)
             pass
     log.info('done')
+    return header
+
+def get_csa_header(dcm):
+    import dicom
+    import nibabel.nicom.dicomwrappers
+    exclude_tags = ['PhoenixZIP', 'SrMsgBuffer']
+    header = {}
+    try:
+        raw_csa_header = nibabel.nicom.dicomwrappers.SiemensWrapper(dcm).csa_header
+        tags = raw_csa_header['tags']
+    except:
+        log.warning('Failed to parse csa header!')
+        return header
+
+    for tag in tags:
+        if not raw_csa_header['tags'][tag]['items'] or tag in exclude_tags:
+            log.debug('Skipping : %s' % tag)
+            pass
+        else:
+            value = raw_csa_header['tags'][tag]['items']
+            if len(value) == 1:
+                value = value[0]
+                if type(value) == str and ( len(value) > 0 and len(value) < 1024 ):
+                    header[format_string(tag)] = format_string(value)
+                else:
+                    header[format_string(tag)] = assign_type(value)
+            else:
+                header[format_string(tag)] = assign_type(value)
+    log.info('done')
+
     return header
 
 
@@ -337,6 +367,10 @@ def dicom_classify(zip_file_path, outbase, timezone):
 
     # Acquisition metadata from dicom header
     metadata['acquisition']['metadata'] = get_dicom_header(dcm)
+    if dcm.Manufacturer == 'SIEMENS':
+        csa_header = get_csa_header(dcm)
+        if csa_header:
+            metadata['acquisition']['metadata']['CSAHeader'] = csa_header
 
     # Write out the metadata to file (.metadata.json)
     metafile_outname = os.path.join(os.path.dirname(outbase),'.metadata.json')
