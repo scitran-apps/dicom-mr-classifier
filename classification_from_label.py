@@ -278,7 +278,6 @@ def infer_classification(label):
             classification['Contrast'] = ['T2']
         elif is_anatomy(label):
             classification['Intent'] = ['Structural']
-            classification['Contrast'] = ['T1']
         elif is_localizer(label):
             classification['Intent'] = ['Localizer']
             classification['Contrast'] = ['T2']
