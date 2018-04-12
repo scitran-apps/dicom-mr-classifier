@@ -265,7 +265,8 @@ def infer_classification(label):
             classification['Intent'] = ['Structural']
             classification['Contrast'] = ['Diffusion']
         elif is_functional_derived(label):
-            classification['Custom'] = ['Functional-Map']
+            classification['Intent'] = ['Functional']
+            classification['Features'] = ['Derived']
         elif is_functional(label):
             classification['Intent'] = ['Functional']
             classification['Contrast'] = ['T2*']
@@ -292,7 +293,6 @@ def infer_classification(label):
             classification['Intent'] = ['Structural']
             classification['Contrast'] = ['PD']
         elif is_perfusion(label):
-            classification['Intent'] = ['Structural']
             classification['Contrast'] = ['Perfusion']
         elif is_spectroscopy(label):
             classification['Contrast'] = ['Spectroscopy']
