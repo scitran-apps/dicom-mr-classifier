@@ -254,6 +254,32 @@ def get_csa_header(dcm):
 
     return header
 
+def get_classification_from_string(value):
+    result = {}
+
+    parts = re.split(r'\s*,\s*', value)
+    last_key = None
+    for part in parts:
+        key_value = re.split(r'\s*:\s*', part)
+
+        if len(key_value) == 2:
+            last_key = key = key_value[0]
+            value = key_value[1]
+        else:
+            if last_key:
+                key = last_key
+            else:
+                log.warn('Unknown classification format: {0}'.format(part))
+                key = 'Custom'
+            value = part
+
+        if key not in result:
+            result[key] = []
+
+        result[key].append(value)
+
+    return result
+
 def get_custom_classification(label, config_file):
     if config_file is None:
         return None
@@ -284,12 +310,12 @@ def get_custom_classification(label, config_file):
                 try:
                     if re.search(k[1:-1], label, re.I):
                         log.debug('Matched custom classification for key: %s', k)
-                        return val
+                        return get_classification_from_string(val)
                 except re.error:
                     log.exception('Invalid regular expression: %s', k)
             elif fnmatch(label.lower(), k.lower()):
                 log.debug('Matched custom classification for key: %s', k)
-                return val
+                return get_classification_from_string(val)
 
     except IOError:
         log.exception('Unable to load config file: %s', config_file)
