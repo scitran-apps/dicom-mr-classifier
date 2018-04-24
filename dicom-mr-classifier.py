@@ -10,7 +10,7 @@ import tzlocal
 import logging
 import zipfile
 import datetime
-import measurement_from_label
+import classification_from_label
 from pprint import pprint
 
 logging.basicConfig()
@@ -343,27 +343,37 @@ def dicom_classify(zip_file_path, outbase, timezone):
                 metadata['session']['subject']['lastname'] = last
                 metadata['session']['subject']['firstname'] = first
 
-    # Acquisition
+    # File classification
+    dicom_file = {}
+    dicom_file['name'] = os.path.basename(zip_file_path)
+    dicom_file['modality'] = 'MR'
+    dicom_file['classification'] = {}
+
+    # Acquisition metadata
     metadata['acquisition'] = {}
     if hasattr(dcm, 'Modality') and dcm.get('Modality'):
         metadata['acquisition']['instrument'] = dcm.get('Modality')
-
     if hasattr(dcm, 'SeriesDescription') and dcm.get('SeriesDescription'):
         metadata['acquisition']['label'] = dcm.get('SeriesDescription')
-        metadata['acquisition']['measurement'] = measurement_from_label.infer_measurement(dcm.get('SeriesDescription'))
-
-    if not metadata['acquisition']['measurement'] or metadata['acquisition']['measurement'] == 'unknown':
-        if dcm.get('Modality'):
-            metadata['acquisition']['measurement'] = dcm.get('Modality')
-        else:
-            metadata['acquisition']['measurement'] = 'unknown'
-
-    # If no pixel data present, make measurement "non-image"
+        # File Classification
+        dicom_file['classification'] = classification_from_label.infer_classification(dcm.get('SeriesDescription'))
+    # If no pixel data present, make classification intent "Non-Image"
     if not hasattr(dcm, 'PixelData'):
-        metadata['acquisition']['measurement'] = 'non-image'
-
+        nonimage_intent = {'Intent': ['Non-Image']}
+        # If classification is a dict, update dict with intent
+        if isinstance(dicom_file['classification'], dict):
+            dicom_file['classification'].update(nonimage_intent)
+        # Else classification is a list, assign dict with intent
+        else:
+            dicom_file['classification'] = nonimage_intent
     if acquisition_timestamp:
         metadata['acquisition']['timestamp'] = acquisition_timestamp
+
+    # Acquisition metadata from dicom header
+    dicom_file['info'] = get_dicom_header(dcm)
+
+    # Append the dicom_file to the files array
+    metadata['acquisition']['files'] = [dicom_file]
 
     # Acquisition metadata from dicom header
     metadata['acquisition']['metadata'] = get_dicom_header(dcm)
