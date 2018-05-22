@@ -10,10 +10,10 @@ base_dir = os.path.abspath(os.path.join(test_dir, '..'))
 sys.path.append(base_dir)
 from classification_from_label import infer_classification
 
-KEYS = ['Intent', 'Contrast', 'Features', 'Custom']
+KEYS = ['Intent', 'Measurement', 'Features', 'Custom']
 
 def classification_from_row(row):
-    # Test Columns are: Label, Intent, Contrast, Features, Custom
+    # Test Columns are: Label, Intent, Measurement, Features, Custom
     result = {}
 
     for i in range(len(KEYS)):
