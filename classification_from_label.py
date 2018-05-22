@@ -252,49 +252,49 @@ def infer_classification(label):
         classification = {}
         if is_anatomy_inplane(label):
             classification['Intent'] = ['Structural']
-            classification['Contrast'] = ['T1']
+            classification['Measurement'] = ['T1']
             classification['Features'] = ['Inplane']
         elif is_fieldmap(label):
             classification['Intent'] = ['Fieldmap']
-            classification['Contrast'] = ['B0']
+            classification['Measurement'] = ['B0']
         elif is_diffusion_derived(label):
             classification['Intent'] = ['Structural']
-            classification['Contrast'] = ['Diffusion']
+            classification['Measurement'] = ['Diffusion']
             classification['Features'] = ['Derived']
         elif is_diffusion(label):
             classification['Intent'] = ['Structural']
-            classification['Contrast'] = ['Diffusion']
+            classification['Measurement'] = ['Diffusion']
         elif is_functional_derived(label):
             classification['Intent'] = ['Functional']
             classification['Features'] = ['Derived']
         elif is_functional(label):
             classification['Intent'] = ['Functional']
-            classification['Contrast'] = ['T2*']
+            classification['Measurement'] = ['T2*']
         elif is_anatomy_t1(label):
             classification['Intent'] = ['Structural']
-            classification['Contrast'] = ['T1']
+            classification['Measurement'] = ['T1']
         elif is_anatomy_t2(label):
             classification['Intent'] = ['Structural']
-            classification['Contrast'] = ['T2']
+            classification['Measurement'] = ['T2']
         elif is_anatomy(label):
             classification['Intent'] = ['Structural']
         elif is_localizer(label):
             classification['Intent'] = ['Localizer']
-            classification['Contrast'] = ['T2']
+            classification['Measurement'] = ['T2']
         elif is_shim(label):
             classification['Intent'] = ['Shim']
         elif is_calibration(label):
             classification['Intent'] = ['Calibration']
         elif is_coil_survey(label):
             classification['Intent'] = ['Calibration']
-            classification['Contrast'] = ['B1']
+            classification['Measurement'] = ['B1']
         elif is_proton_density(label):
             classification['Intent'] = ['Structural']
-            classification['Contrast'] = ['PD']
+            classification['Measurement'] = ['PD']
         elif is_perfusion(label):
-            classification['Contrast'] = ['Perfusion']
+            classification['Measurement'] = ['Perfusion']
         elif is_spectroscopy(label):
-            classification['Contrast'] = ['Spectroscopy']
+            classification['Measurement'] = ['Spectroscopy']
         elif is_phase_map(label):
             classification['Custom'] = ['Phase Map']
         elif is_screenshot(label):
