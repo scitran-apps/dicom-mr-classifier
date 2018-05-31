@@ -253,7 +253,7 @@ def infer_classification(label):
         if is_anatomy_inplane(label):
             classification['Intent'] = ['Structural']
             classification['Measurement'] = ['T1']
-            classification['Features'] = ['Inplane']
+            classification['Features'] = ['In-Plane']
         elif is_fieldmap(label):
             classification['Intent'] = ['Fieldmap']
             classification['Measurement'] = ['B0']
