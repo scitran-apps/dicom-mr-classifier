@@ -36,6 +36,25 @@ dpkg-reconfigure -f noninteractive tzdata
 
 
 ##############################################################################
+# Handle sync option
+
+if [[ ${config_sync} == "true" ]]; then
+  echo -e "$CONTAINER  Syncing classification code from scitran-apps/dicom-mr-classifier/sync-classification-e4..."
+  mv ${FLYWHEEL_BASE}/classification_from_label.py /tmp
+  wget --quiet -O ${FLYWHEEL_BASE}/classification_from_label.py \
+      https://raw.githubusercontent.com/scitran-apps/dicom-mr-classifier/sync-classification-e4/classification_from_label.py
+  STAT_GET=$?
+  if [[ $STAT_GET != 0 ]]; then
+    echo -e "$CONTAINER Error during sync!"
+    mv /tmp/classification_from_label.py ${FLYWHEEL_BASE}
+  else
+    chmod +x ${FLYWHEEL_BASE}/classification_from_label.py
+  fi
+else
+  echo -e "$CONTAINER  Not syncing classification code. Using built-in version..."
+fi
+
+##############################################################################
 # Check I/O directories and Generate metadata
 
 # Check that /output directory is empty
@@ -85,7 +104,7 @@ if [[ -f $output ]] && [[ $E_STATUS == 0 ]]; then
     chmod -R 777 $OUTPUT_DIR
     echo -e "$CONTAINER  Success."
 else
-    echo -e "$CONTAINER  Errors occured during metadata generation... Exiting!"
+    echo -e "$CONTAINER  Errors occurred during metadata generation... Exiting!"
     exit 1
     if [[ -f $output ]]; then
         rm $output

@@ -19,7 +19,8 @@ RUN apt-get update && apt-get -y install \
     python \
     python-dev \
     python-pip \
-    jq
+    jq \
+    wget
 
 # Install scitran.data dependencies
 RUN pip install \
