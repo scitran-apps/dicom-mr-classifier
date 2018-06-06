@@ -64,28 +64,32 @@ if [[ -z $@ ]]
             bni=`basename "$input_file"`
             output_file_base=$OUTPUT_DIR/${bni%_dicom.zip}
             PYHONPATH=$PYTHONPATH:/flywheel/v0/ python $FLYWHEEL_BASE/dicom-mr-classifier.py "$input_file" "$output_file_base"
+            E_STATUS=$?
       else
             echo -e "No inputs were provided and $INPUT_DIR has no valid input files!"
             exit 1
       fi
 else
     PYHONPATH=$PYTHONPATH:/flywheel/v0/ python $FLYWHEEL_BASE/dicom-mr-classifier.py $@
+    E_STATUS=$?
 fi
 
 
 ##############################################################################
 # Check for outputs and exit
 
-outputs=`find $OUTPUT_DIR -type f -name ".metadata.json"`
+output=`find $OUTPUT_DIR -type f -name ".metadata.json"`
 
 # If outputs exist, then go on...
-if [[ -z $outputs ]]
-    then
-        echo -e "$CONTAINER  No results found in output directory... Exiting"
-        exit 1
-    else
-        chmod -R 777 $OUTPUT_DIR
-        echo -e "$CONTAINER  Success."
+if [[ -f $output ]] && [[ $E_STATUS == 0 ]]; then
+    chmod -R 777 $OUTPUT_DIR
+    echo -e "$CONTAINER  Success."
+else
+    echo -e "$CONTAINER  Errors occured during metadata generation... Exiting!"
+    exit 1
+    if [[ -f $output ]]; then
+        rm $output
+    fi
 fi
 
 exit 0
