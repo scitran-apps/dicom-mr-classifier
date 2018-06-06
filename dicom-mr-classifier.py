@@ -168,7 +168,7 @@ def format_string(in_string):
     formatted = filter(lambda x: x in string.printable, formatted)
     if len(formatted) == 1 and formatted == '?':
         formatted = None
-    return formatted
+    return formatted#.encode('utf-8').strip()
 
 
 def get_seq_data(sequence, ignore_keys):
@@ -305,7 +305,7 @@ def dicom_classify(zip_file_path, outbase, timezone):
     if session_timestamp:
         metadata['session']['timestamp'] = session_timestamp
     if hasattr(dcm, 'OperatorsName') and dcm.get('OperatorsName'):
-        metadata['session']['operator'] = dcm.get('OperatorsName')
+        metadata['session']['operator'] = format_string(dcm.get('OperatorsName'))
     session_label = get_session_label(dcm)
     if session_label:
         metadata['session']['label'] = session_label
@@ -325,18 +325,18 @@ def dicom_classify(zip_file_path, outbase, timezone):
         # If the first name or last name field has a space-separated string, and one or the other field is not
         # present, then we assume that the operator put both first and last names in that one field. We then
         # parse that field to populate first and last name.
-        metadata['session']['subject']['firstname'] = dcm.get('PatientName').given_name
+        metadata['session']['subject']['firstname'] = format_string(dcm.get('PatientName').given_name)
         if not dcm.get('PatientName').family_name:
-            name = dcm.get('PatientName').given_name.split(' ')
+            name = format_string(dcm.get('PatientName').given_name.split(' '))
             if len(name) == 2:
                 first = name[0]
                 last = name[1]
                 metadata['session']['subject']['lastname'] = last
                 metadata['session']['subject']['firstname'] = first
     if hasattr(dcm, 'PatientName') and dcm.get('PatientName').family_name:
-        metadata['session']['subject']['lastname'] = dcm.get('PatientName').family_name
+        metadata['session']['subject']['lastname'] = format_string(dcm.get('PatientName').family_name)
         if not dcm.get('PatientName').given_name:
-            name = dcm.get('PatientName').family_name.split(' ')
+            name = format_string(dcm.get('PatientName').family_name.split(' '))
             if len(name) == 2:
                 first = name[0]
                 last = name[1]
@@ -352,11 +352,11 @@ def dicom_classify(zip_file_path, outbase, timezone):
     # Acquisition metadata
     metadata['acquisition'] = {}
     if hasattr(dcm, 'Modality') and dcm.get('Modality'):
-        metadata['acquisition']['instrument'] = dcm.get('Modality')
-    if hasattr(dcm, 'SeriesDescription') and dcm.get('SeriesDescription'):
-        metadata['acquisition']['label'] = dcm.get('SeriesDescription')
+        metadata['acquisition']['instrument'] = format_string(dcm.get('Modality'))
+    if hasattr(dcm, 'SeriesDescription') and format_string(dcm.get('SeriesDescription')):
+        metadata['acquisition']['label'] = format_string(dcm.get('SeriesDescription'))
         # File Classification
-        dicom_file['classification'] = classification_from_label.infer_classification(dcm.get('SeriesDescription'))
+        dicom_file['classification'] = classification_from_label.infer_classification(format_string(dcm.get('SeriesDescription')))
     # If no pixel data present, make classification intent "Non-Image"
     if not hasattr(dcm, 'PixelData'):
         nonimage_intent = {'Intent': ['Non-Image']}
