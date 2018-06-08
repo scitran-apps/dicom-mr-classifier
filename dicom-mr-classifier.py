@@ -22,8 +22,7 @@ def get_session_label(dcm):
     """
     session_label = ''
 
-    if (dcm.get('Manufacturer').find('GE') != -1 or dcm.get('Manufacturer').find('Philips')) != -1
-        and dcm.has_key('StudyID'):
+    if ( dcm.get('Manufacturer').find('GE') != -1 or dcm.get('Manufacturer').find('Philips') != -1 ) and dcm.get('StudyID'):
         session_label = dcm.get('StudyID')
     else:
         session_label = dcm.get('StudyInstanceUID')
