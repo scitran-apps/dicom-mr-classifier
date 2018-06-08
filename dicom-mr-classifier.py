@@ -281,7 +281,7 @@ def dicom_classify(zip_file_path, outbase, timezone):
             dcm_path = zip.extract(zip.namelist()[n], '/tmp')
             if os.path.isfile(dcm_path):
                 try:
-                    print('reading %s' % dcm_path)
+                    log.info('reading %s' % dcm_path)
                     dcm = dicom.read_file(dcm_path)
                     # Here we check for the Raw Data Storage SOP Class, if there
                     # are other DICOM files in the zip then we read the next one,
@@ -294,7 +294,7 @@ def dicom_classify(zip_file_path, outbase, timezone):
                 except:
                     pass
             else:
-                print('%s does not exist!' % dcm_path)
+                log.warning('%s does not exist!' % dcm_path)
     else:
         log.info('Not a zip. Attempting to read %s directly' % os.path.basename(zip_file_path))
         dcm = dicom.read_file(zip_file_path)
