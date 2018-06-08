@@ -22,7 +22,8 @@ def get_session_label(dcm):
     """
     session_label = ''
 
-    if dcm.get('Manufacturer').find('GE') != -1 and dcm.has_key('StudyID'):
+    if (dcm.get('Manufacturer').find('GE') != -1 or dcm.get('Manufacturer').find('Philips')) != -1
+        and dcm.has_key('StudyID'):
         session_label = dcm.get('StudyID')
     else:
         session_label = dcm.get('StudyInstanceUID')
@@ -276,17 +277,25 @@ def dicom_classify(zip_file_path, outbase, timezone):
     dcm = []
     if zipfile.is_zipfile(zip_file_path):
         zip = zipfile.ZipFile(zip_file_path)
-        for n in range((len(zip.namelist()) -1), -1, -1):
+        num_files = len(zip.namelist())
+        for n in range((num_files -1), -1, -1):
             dcm_path = zip.extract(zip.namelist()[n], '/tmp')
             if os.path.isfile(dcm_path):
                 try:
-                    log.info('reading %s' % dcm_path)
+                    print('reading %s' % dcm_path)
                     dcm = dicom.read_file(dcm_path)
-                    break
+                    # Here we check for the Raw Data Storage SOP Class, if there
+                    # are other DICOM files in the zip then we read the next one,
+                    # if this is the only class of DICOM in the file, we accept
+                    # our fate and move on.
+                    if dcm.get('SOPClassUID') == 'Raw Data Storage' and n != range((num_files -1), -1, -1)[-1]:
+                        continue
+                    else:
+                        break
                 except:
                     pass
             else:
-                log.warning('%s does not exist!' % dcm_path)
+                print('%s does not exist!' % dcm_path)
     else:
         log.info('Not a zip. Attempting to read %s directly' % os.path.basename(zip_file_path))
         dcm = dicom.read_file(zip_file_path)
