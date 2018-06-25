@@ -24,10 +24,10 @@ function parse_config {
   MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
 
   if [[ -f $CONFIG_FILE ]]; then
-    echo -e "$(cat $CONFIG_FILE | jq -r '.config.'$1)"
+    echo "$(cat $CONFIG_FILE | jq -r '.config.'$1)"
   else
     CONFIG_FILE=$MANIFEST_FILE
-    echo -e "$(cat $MANIFEST_FILE | jq -r '.config.'$1'.default')"
+    echo "$(cat $MANIFEST_FILE | jq -r '.config.'$1'.default')"
   fi
 }
 
