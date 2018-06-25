@@ -18,18 +18,24 @@ MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
 ##############################################################################
 # Parse configuration
 
-if [[ -f $CONFIG_FILE ]]; then
-  eval $(jq -r '.config | to_entries[] | "config_\(.key)=\(.value)"' $CONFIG_FILE)
-else
-  CONFIG_FILE=$MANIFEST_FILE
-  eval $(jq -r '.config | to_entries[] | "config_\(.key)=\(.value.default)"' $CONFIG_FILE)
-fi
+function parse_config {
+
+  CONFIG_FILE=$FLYWHEEL_BASE/config.json
+  MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
+
+  if [[ -f $CONFIG_FILE ]]; then
+    echo "$(cat $CONFIG_FILE | jq -r '.config.'$1)"
+  else
+    CONFIG_FILE=$MANIFEST_FILE
+    echo "$(cat $MANIFEST_FILE | jq -r '.config.'$1'.default')"
+  fi
+}
 
 
 ##############################################################################
 # Set Time Zone
 
-TZ="${config_timezone}"
+TZ="$(parse_config 'timezone')"
 echo "${CONTAINER}  Setting time zone to: $TZ"
 echo "$TZ" > /etc/timezone && ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime
 dpkg-reconfigure -f noninteractive tzdata
@@ -38,7 +44,8 @@ dpkg-reconfigure -f noninteractive tzdata
 ##############################################################################
 # Handle sync option
 
-if [[ ${config_sync} == "true" ]]; then
+SYNC=$(parse_config 'sync')
+if [[ ${SYNC} == "true" ]]; then
   echo -e "$CONTAINER  Syncing classification code from scitran-apps/dicom-mr-classifier/sync-classification-e4..."
   mv ${FLYWHEEL_BASE}/classification_from_label.py /tmp
   wget --quiet -O ${FLYWHEEL_BASE}/classification_from_label.py \

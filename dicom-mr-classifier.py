@@ -221,7 +221,6 @@ def get_dicom_header(dcm):
         except:
             log.debug('Failed to get ' + tag)
             pass
-    log.info('done')
     return header
 
 def get_csa_header(dcm):
@@ -250,7 +249,6 @@ def get_csa_header(dcm):
                     header[format_string(tag)] = assign_type(value)
             else:
                 header[format_string(tag)] = assign_type(value)
-    log.info('done')
 
     return header
 
@@ -281,7 +279,7 @@ def get_classification_from_string(value):
     return result
 
 def get_custom_classification(label, config_file):
-    if config_file is None:
+    if config_file is None or not os.path.isfile(config_file):
         return None
 
     try:
@@ -293,7 +291,7 @@ def get_custom_classification(label, config_file):
         if not classifications:
             log.debug('No custom classifications found in config')
             return None
-        
+
         if not isinstance(classifications, dict):
             log.warning('classifications must be an object!')
             return None
@@ -319,7 +317,7 @@ def get_custom_classification(label, config_file):
 
     except IOError:
         log.exception('Unable to load config file: %s', config_file)
-    
+
     return None
 
 
@@ -432,12 +430,13 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
         metadata['acquisition']['instrument'] = format_string(dcm.get('Modality'))
 
     series_desc = format_string(dcm.get('SeriesDescription', ''))
-    if series_desc: 
-        metadata['acquisition']['label'] = series_desc 
+    if series_desc:
+        metadata['acquisition']['label'] = series_desc
         classification = get_custom_classification(series_desc, config_file)
         log.info('Custom classification from config: %s', classification)
         if not classification:
             classification = classification_from_label.infer_classification(series_desc)
+            log.info('Inferred classification from label: %s', classification)
         dicom_file['classification'] = classification
 
     # If no pixel data present, make classification intent "Non-Image"
