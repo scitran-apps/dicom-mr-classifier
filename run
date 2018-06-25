@@ -45,7 +45,7 @@ dpkg-reconfigure -f noninteractive tzdata
 # Handle sync option
 
 SYNC=$(parse_config 'sync')
-if [[ $(parse_config 'sync') == "true" ]]; then
+if [[ ${SYNC} == "true" ]]; then
   echo -e "$CONTAINER  Syncing classification code from scitran-apps/dicom-mr-classifier/sync-classification-e4..."
   mv ${FLYWHEEL_BASE}/classification_from_label.py /tmp
   wget --quiet -O ${FLYWHEEL_BASE}/classification_from_label.py \
