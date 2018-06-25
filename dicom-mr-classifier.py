@@ -11,6 +11,7 @@ import logging
 import zipfile
 import datetime
 import classification_from_label
+from fnmatch import fnmatch
 from pprint import pprint
 
 logging.basicConfig()
@@ -253,8 +254,76 @@ def get_csa_header(dcm):
 
     return header
 
+def get_classification_from_string(value):
+    result = {}
 
-def dicom_classify(zip_file_path, outbase, timezone):
+    parts = re.split(r'\s*,\s*', value)
+    last_key = None
+    for part in parts:
+        key_value = re.split(r'\s*:\s*', part)
+
+        if len(key_value) == 2:
+            last_key = key = key_value[0]
+            value = key_value[1]
+        else:
+            if last_key:
+                key = last_key
+            else:
+                log.warn('Unknown classification format: {0}'.format(part))
+                key = 'Custom'
+            value = part
+
+        if key not in result:
+            result[key] = []
+
+        result[key].append(value)
+
+    return result
+
+def get_custom_classification(label, config_file):
+    if config_file is None:
+        return None
+
+    try:
+        with open(config_file, 'r') as f:
+            config = json.load(f)
+
+        # Check custom classifiers
+        classifications = config['inputs'].get('classifications', {}).get('value', {})
+        if not classifications:
+            log.debug('No custom classifications found in config')
+            return None
+        
+        if not isinstance(classifications, dict):
+            log.warning('classifications must be an object!')
+            return None
+
+        for k in classifications.keys():
+            val = classifications[k]
+
+            if not isinstance(val, basestring):
+                log.warn('Expected string value for classification key %s', k)
+                continue
+
+            if len(k) > 2 and k[0] == '/' and k[-1] == '/':
+                # Regex
+                try:
+                    if re.search(k[1:-1], label, re.I):
+                        log.debug('Matched custom classification for key: %s', k)
+                        return get_classification_from_string(val)
+                except re.error:
+                    log.exception('Invalid regular expression: %s', k)
+            elif fnmatch(label.lower(), k.lower()):
+                log.debug('Matched custom classification for key: %s', k)
+                return get_classification_from_string(val)
+
+    except IOError:
+        log.exception('Unable to load config file: %s', config_file)
+    
+    return None
+
+
+def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
     """
     Extracts metadata from dicom file header within a zip file and writes to .metadata.json.
     """
@@ -361,10 +430,16 @@ def dicom_classify(zip_file_path, outbase, timezone):
     metadata['acquisition'] = {}
     if hasattr(dcm, 'Modality') and dcm.get('Modality'):
         metadata['acquisition']['instrument'] = format_string(dcm.get('Modality'))
-    if hasattr(dcm, 'SeriesDescription') and format_string(dcm.get('SeriesDescription')):
-        metadata['acquisition']['label'] = format_string(dcm.get('SeriesDescription'))
-        # File Classification
-        dicom_file['classification'] = classification_from_label.infer_classification(format_string(dcm.get('SeriesDescription')))
+
+    series_desc = format_string(dcm.get('SeriesDescription', ''))
+    if series_desc: 
+        metadata['acquisition']['label'] = series_desc 
+        classification = get_custom_classification(series_desc, config_file)
+        log.info('Custom classification from config: %s', classification)
+        if not classification:
+            classification = classification_from_label.infer_classification(series_desc)
+        dicom_file['classification'] = classification
+
     # If no pixel data present, make classification intent "Non-Image"
     if not hasattr(dcm, 'PixelData'):
         nonimage_intent = {'Intent': ['Non-Image']}
@@ -410,6 +485,7 @@ if __name__ == '__main__':
     ap.add_argument('dcmzip', help='path to dicom zip')
     ap.add_argument('outbase', nargs='?', help='outfile name prefix')
     ap.add_argument('--log_level', help='logging level', default='info')
+    ap.add_argument('--config-file', help='Configuration file with custom classifications in context')
     args = ap.parse_args()
 
     log.setLevel(getattr(logging, args.log_level.upper()))
@@ -418,7 +494,7 @@ if __name__ == '__main__':
 
     args.timezone = validate_timezone(tzlocal.get_localzone())
 
-    metadatafile = dicom_classify(args.dcmzip, args.outbase, args.timezone)
+    metadatafile = dicom_classify(args.dcmzip, args.outbase, args.timezone, config_file=args.config_file)
 
     if os.path.exists(metadatafile):
         log.info('generated %s' % metadatafile)
