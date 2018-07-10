@@ -22,8 +22,7 @@ def get_session_label(dcm):
     Switch on manufacturer and either pull out the StudyID or the StudyInstanceUID
     """
     session_label = ''
-
-    if ( dcm.get('Manufacturer').find('GE') != -1 or dcm.get('Manufacturer').find('Philips') != -1 ) and dcm.get('StudyID'):
+    if ( dcm.get('Manufacturer') and (dcm.get('Manufacturer').find('GE') != -1 or dcm.get('Manufacturer').find('Philips') != -1 ) and dcm.get('StudyID')):
         session_label = dcm.get('StudyID')
     else:
         session_label = dcm.get('StudyInstanceUID')
@@ -459,7 +458,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
 
     # Acquisition metadata from dicom header
     metadata['acquisition']['metadata'] = get_dicom_header(dcm)
-    if dcm.Manufacturer == 'SIEMENS':
+    if dcm.get('Manufacturer') == 'SIEMENS':
         csa_header = get_csa_header(dcm)
         if csa_header:
             metadata['acquisition']['metadata']['CSAHeader'] = csa_header
