@@ -103,6 +103,10 @@ def get_timestamp(dcm, timezone):
     elif hasattr(dcm, 'AcquisitionDateTime'):
         acquitision_date = dcm.AcquisitionDateTime[0:8]
         acquisition_time = dcm.AcquisitionDateTime[8:]
+    # The following allows the timestamps to be set for ScreenSaves
+    elif hasattr(dcm, 'ContentDate') and hasattr(dcm, 'ContentTime'):
+        acquitision_date = dcm.ContentDate
+        acquisition_time = dcm.ContentTime
     else:
         acquitision_date = None
         acquisition_time = None
