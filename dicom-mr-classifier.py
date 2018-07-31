@@ -79,7 +79,14 @@ def timestamp(date, time, timezone):
     """
     if date and time and timezone:
         # return datetime.datetime.strptime(date + time[:6], '%Y%m%d%H%M%S')
-        return timezone.localize(datetime.datetime.strptime(date + time[:6], '%Y%m%d%H%M%S'), timezone)
+        try:
+            return timezone.localize(datetime.datetime.strptime(date + time[:6], '%Y%m%d%H%M%S'), timezone)
+        except:
+            log.warning('Failed to create timestamp!')
+            log.info(date)
+            log.info(time)
+            log.info(timezone)
+            return None
     return None
 
 
