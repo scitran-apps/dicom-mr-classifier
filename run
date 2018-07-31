@@ -1,121 +1,28 @@
 #! /bin/bash
-# This script is meant to evoke the algorithm without requiring any input arguments
 #
 
 CONTAINER="[ scitran/dicom-mr-classifier ]"
+echo -e "$CONTAINER  running..."
 
-
-##############################################################################
-# Configure paths
-
+# Set paths
 FLYWHEEL_BASE=/flywheel/v0
 OUTPUT_DIR=$FLYWHEEL_BASE/output
-INPUT_DIR=$FLYWHEEL_BASE/input/dicom
-CONFIG_FILE=$FLYWHEEL_BASE/config.json
-MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
+RUN_SCRIPT=$FLYWHEEL_BASE/run_classifier
 
+# Change permissions for flywheel user
+chown -R flywheel $OUTPUT_DIR
 
-##############################################################################
-# Parse configuration
+# Set Permissions for flywheel user to set timezone
+chown flywheel /etc/timezone
+cp ${FLYWHEEL_BASE}/classification_from_label.py /tmp
+echo "flywheel ALL=(ALL) NOPASSWD: /usr/sbin/dpkg-reconfigure" >> /etc/sudoers
+echo "flywheel ALL=(ALL) NOPASSWD: /bin/ln" >> /etc/sudoers
 
-function parse_config {
+# Execute run script as Flywheel user
+sudo -u flywheel $RUN_SCRIPT
+exit_status=$?
 
-  CONFIG_FILE=$FLYWHEEL_BASE/config.json
-  MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
-
-  if [[ -f $CONFIG_FILE ]]; then
-    echo "$(cat $CONFIG_FILE | jq -r '.config.'$1)"
-  else
-    CONFIG_FILE=$MANIFEST_FILE
-    echo "$(cat $MANIFEST_FILE | jq -r '.config.'$1'.default')"
-  fi
-}
-
-
-##############################################################################
-# Set Time Zone
-
-TZ="$(parse_config 'timezone')"
-echo "${CONTAINER}  Setting time zone to: $TZ"
-echo "$TZ" > /etc/timezone && ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime
-dpkg-reconfigure -f noninteractive tzdata
-
-
-##############################################################################
-# Handle sync option
-
-SYNC=$(parse_config 'sync')
-if [[ ${SYNC} == "true" ]]; then
-  echo -e "$CONTAINER  Syncing classification code from scitran-apps/dicom-mr-classifier/sync-classification-e4..."
-  mv ${FLYWHEEL_BASE}/classification_from_label.py /tmp
-  wget --quiet -O ${FLYWHEEL_BASE}/classification_from_label.py \
-      https://raw.githubusercontent.com/scitran-apps/dicom-mr-classifier/sync-classification-e4/classification_from_label.py
-  STAT_GET=$?
-  if [[ $STAT_GET != 0 ]]; then
-    echo -e "$CONTAINER Error during sync!"
-    mv /tmp/classification_from_label.py ${FLYWHEEL_BASE}
-  else
-    chmod +x ${FLYWHEEL_BASE}/classification_from_label.py
-  fi
-else
-  echo -e "$CONTAINER  Not syncing classification code. Using built-in version..."
-fi
-
-##############################################################################
-# Check I/O directories and Generate metadata
-
-# Check that /output directory is empty
-if [ "-d" "$OUTPUT_DIR" ]
-    then
-        if [ "$(ls -A $OUTPUT_DIR)" ]; then
-            echo -e "$CONTAINER  Warning $OUTPUT_DIR is not Empty! Results may be overwritten."
-        fi
-    else
-        echo -e "$CONTAINER  $OUTPUT_DIR not found. It will be created."
-        mkdir $OUTPUT_DIR
-fi
-
-
-# Check for input
-if [[ -z $@ ]]
-    then
-      input_file=`find $INPUT_DIR -type f -name "*.zip*" | head -1`
-      # Check for non-zipped files
-      if [[ -z $input_file ]]; then
-        input_file=`find $INPUT_DIR -type f -not -path '*/\.*' | head -1`
-      fi
-
-      if [[ -n $input_file ]]
-        then
-            bni=`basename "$input_file"`
-            output_file_base=$OUTPUT_DIR/${bni%_dicom.zip}
-            PYHONPATH=$PYTHONPATH:/flywheel/v0/ python $FLYWHEEL_BASE/dicom-mr-classifier.py "$input_file" "$output_file_base" --config-file "$CONFIG_FILE"
-            E_STATUS=$?
-      else
-            echo -e "No inputs were provided and $INPUT_DIR has no valid input files!"
-            exit 1
-      fi
-else
-    PYHONPATH=$PYTHONPATH:/flywheel/v0/ python $FLYWHEEL_BASE/dicom-mr-classifier.py $@
-    E_STATUS=$?
-fi
-
-
-##############################################################################
-# Check for outputs and exit
-
-output=`find $OUTPUT_DIR -type f -name ".metadata.json"`
-
-# If outputs exist, then go on...
-if [[ -f $output ]] && [[ $E_STATUS == 0 ]]; then
-    chmod -R 777 $OUTPUT_DIR
-    echo -e "$CONTAINER  Success."
-else
-    echo -e "$CONTAINER  Errors occurred during metadata generation... Exiting!"
-    exit 1
-    if [[ -f $output ]]; then
-        rm $output
-    fi
-fi
-
-exit 0
+# Exit using exit status from script
+echo -e "$CONTAINER  Exiting with exit=$exit_status"
+exit $exit_status
+OUTPUT_DIR=$FLYWHEEL_BASE/output
