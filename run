@@ -1,0 +1,28 @@
+#! /bin/bash
+#
+
+CONTAINER="[ scitran/dicom-mr-classifier ]"
+echo -e "$CONTAINER  running..."
+
+# Set paths
+FLYWHEEL_BASE=/flywheel/v0
+OUTPUT_DIR=$FLYWHEEL_BASE/output
+RUN_SCRIPT=$FLYWHEEL_BASE/run_classifier
+
+# Change permissions for flywheel user
+chown -R flywheel $OUTPUT_DIR
+
+# Set Permissions for flywheel user to set timezone
+chown flywheel /etc/timezone
+cp ${FLYWHEEL_BASE}/classification_from_label.py /tmp
+echo "flywheel ALL=(ALL) NOPASSWD: /usr/sbin/dpkg-reconfigure" >> /etc/sudoers
+echo "flywheel ALL=(ALL) NOPASSWD: /bin/ln" >> /etc/sudoers
+
+# Execute run script as Flywheel user
+sudo -u flywheel $RUN_SCRIPT
+exit_status=$?
+
+# Exit using exit status from script
+echo -e "$CONTAINER  Exiting with exit=$exit_status"
+exit $exit_status
+OUTPUT_DIR=$FLYWHEEL_BASE/output

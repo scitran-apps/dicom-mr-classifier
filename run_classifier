@@ -37,8 +37,8 @@ function parse_config {
 
 TZ="$(parse_config 'timezone')"
 echo "${CONTAINER}  Setting time zone to: $TZ"
-echo "$TZ" > /etc/timezone && ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime
-dpkg-reconfigure -f noninteractive tzdata
+echo "$TZ" > /etc/timezone && sudo ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime
+sudo dpkg-reconfigure -f noninteractive tzdata
 
 
 ##############################################################################
@@ -47,13 +47,11 @@ dpkg-reconfigure -f noninteractive tzdata
 SYNC=$(parse_config 'sync')
 if [[ ${SYNC} == "true" ]]; then
   echo -e "$CONTAINER  Syncing classification code from scitran-apps/dicom-mr-classifier/sync-classification-e4..."
-  mv ${FLYWHEEL_BASE}/classification_from_label.py /tmp
   wget --quiet -O ${FLYWHEEL_BASE}/classification_from_label.py \
       https://raw.githubusercontent.com/scitran-apps/dicom-mr-classifier/sync-classification-e4/classification_from_label.py
   STAT_GET=$?
   if [[ $STAT_GET != 0 ]]; then
     echo -e "$CONTAINER Error during sync!"
-    mv /tmp/classification_from_label.py ${FLYWHEEL_BASE}
   else
     chmod +x ${FLYWHEEL_BASE}/classification_from_label.py
   fi
