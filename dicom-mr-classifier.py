@@ -155,6 +155,8 @@ def assign_type(s):
     """
     Sets the type of a given input.
     """
+    if type(s) == dicom.valuerep.PersonName or type(s) == dicom.valuerep.PersonName3 or type(s) == dicom.valuerep.PersonNameBase:
+        return format_string(s)
     if type(s) == list or type(s) == dicom.multival.MultiValue:
         try:
             return [ int(x) for x in s ]
@@ -410,23 +412,23 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
         # If the first name or last name field has a space-separated string, and one or the other field is not
         # present, then we assume that the operator put both first and last names in that one field. We then
         # parse that field to populate first and last name.
-        metadata['session']['subject']['firstname'] = format_string(dcm.get('PatientName').given_name)
+        metadata['session']['subject']['firstname'] = str(format_string(dcm.get('PatientName').given_name))
         if not dcm.get('PatientName').family_name:
             name = format_string(dcm.get('PatientName').given_name.split(' '))
             if len(name) == 2:
                 first = name[0]
                 last = name[1]
-                metadata['session']['subject']['lastname'] = last
-                metadata['session']['subject']['firstname'] = first
+                metadata['session']['subject']['lastname'] = str(last)
+                metadata['session']['subject']['firstname'] = str(first)
     if hasattr(dcm, 'PatientName') and dcm.get('PatientName').family_name:
-        metadata['session']['subject']['lastname'] = format_string(dcm.get('PatientName').family_name)
+        metadata['session']['subject']['lastname'] = str(format_string(dcm.get('PatientName').family_name))
         if not dcm.get('PatientName').given_name:
             name = format_string(dcm.get('PatientName').family_name.split(' '))
             if len(name) == 2:
                 first = name[0]
                 last = name[1]
-                metadata['session']['subject']['lastname'] = last
-                metadata['session']['subject']['firstname'] = first
+                metadata['session']['subject']['lastname'] = str(last)
+                metadata['session']['subject']['firstname'] = str(first)
 
     # File classification
     dicom_file = {}
