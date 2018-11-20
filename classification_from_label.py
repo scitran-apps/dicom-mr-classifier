@@ -3,10 +3,11 @@
 Infer acquisition classification by parsing the description label.
 
 
-Example usage:
+Example DB usage:
 
     ## Update acquisition measurement in the DB
     labels=list(db.acquisitions.find({},['label']))
+
     labels_only = []
     for l in labels:
         labels_only.append(l['label'])
@@ -17,7 +18,6 @@ Example usage:
     for l in uls:
         measurement = infer_measurement(l)
         db.acquisitions.update_many({'label': l}, {'$set': {'measurement': measurement}})
-
 '''
 
 import re
@@ -113,7 +113,8 @@ def is_functional(label):
         re.compile('^Curiosity', re.IGNORECASE),
         re.compile('^DD_', re.IGNORECASE),
         re.compile('^Poke', re.IGNORECASE),
-        re.compile('^Effort', re.IGNORECASE)
+        re.compile('^Effort', re.IGNORECASE),
+        re.compile('emotion|conflict', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -238,8 +239,12 @@ def is_spectroscopy(label):
         re.compile('mip', re.IGNORECASE),
         re.compile('mrs', re.IGNORECASE),
         re.compile('svs', re.IGNORECASE),
-        re.compile('GABA', re.IGNORECASE),
-        re.compile('csi', re.IGNORECASE)
+        re.compile('gaba', re.IGNORECASE),
+        re.compile('csi', re.IGNORECASE),
+        re.compile('nfl', re.IGNORECASE),
+        re.compile('mega', re.IGNORECASE),
+        re.compile('press', re.IGNORECASE),
+        re.compile('spect', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -302,4 +307,4 @@ def infer_classification(label):
         else:
             print label.strip('\n') + ' --->>>> unknown'
 
-    return classification 
+    return classification
