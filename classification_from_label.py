@@ -236,7 +236,6 @@ def regex_search_label(regexes, label):
 # Spectroscopy
 def is_spectroscopy(label):
     regexes = [
-        re.compile('mip', re.IGNORECASE),
         re.compile('mrs', re.IGNORECASE),
         re.compile('svs', re.IGNORECASE),
         re.compile('gaba', re.IGNORECASE),
@@ -245,6 +244,16 @@ def is_spectroscopy(label):
         re.compile('mega', re.IGNORECASE),
         re.compile('press', re.IGNORECASE),
         re.compile('spect', re.IGNORECASE)
+        ]
+    return regex_search_label(regexes, label)
+
+# Susceptability
+def is_susceptability(label):
+    regexes = [
+        re.compile('swi', re.IGNORECASE),
+        re.compile('mag_images', re.IGNORECASE),
+        re.compile('pha_images', re.IGNORECASE),
+        re.compile('mip_images', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
 
@@ -275,12 +284,12 @@ def infer_classification(label):
         elif is_functional(label):
             classification['Intent'] = ['Functional']
             classification['Measurement'] = ['T2*']
-        elif is_anatomy_t1(label):
-            classification['Intent'] = ['Structural']
-            classification['Measurement'] = ['T1']
         elif is_anatomy_t2(label):
             classification['Intent'] = ['Structural']
             classification['Measurement'] = ['T2']
+        elif is_anatomy_t1(label):
+            classification['Intent'] = ['Structural']
+            classification['Measurement'] = ['T1']
         elif is_anatomy(label):
             classification['Intent'] = ['Structural']
         elif is_localizer(label):
@@ -298,6 +307,8 @@ def infer_classification(label):
             classification['Measurement'] = ['PD']
         elif is_perfusion(label):
             classification['Measurement'] = ['Perfusion']
+        elif is_susceptability(label):
+            classification['Measurement'] = ['Susceptability']
         elif is_spectroscopy(label):
             classification['Measurement'] = ['Spectroscopy']
         elif is_phase_map(label):
