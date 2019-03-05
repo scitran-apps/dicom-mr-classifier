@@ -12,6 +12,7 @@
   "custom": {
     "docker-image": "scitran/dicom-mr-classifier:0.8.2",
     "flywheel": {
+      "suite": "SciTran",
       "uid": 1000,
       "gid": 1000
     }
