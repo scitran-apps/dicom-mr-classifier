@@ -118,7 +118,7 @@ def get_timestamp(dcm, timezone):
         acquitision_date = None
         acquisition_time = None
 
-    session_timestamp = timestamp(dcm.StudyDate, dcm.StudyTime, timezone)
+    session_timestamp = timestamp(study_date, study_time, timezone)
     acquisition_timestamp = timestamp(acquitision_date, acquisition_time, timezone)
 
     if session_timestamp:
