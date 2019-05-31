@@ -22,6 +22,7 @@ Example DB usage:
 
 import re
 
+
 # Anatomy, T1
 def is_anatomy_t1(label):
     regexes = [
@@ -37,6 +38,7 @@ def is_anatomy_t1(label):
     ]
     return regex_search_label(regexes, label)
 
+
 # Anatomy, T2
 def is_anatomy_t2(label):
     regexes = [
@@ -44,12 +46,14 @@ def is_anatomy_t2(label):
     ]
     return regex_search_label(regexes, label)
 
-# Aanatomy, Inplane
+
+# Anatomy, Inplane
 def is_anatomy_inplane(label):
     regexes = [
         re.compile('inplane', re.IGNORECASE)
     ]
     return regex_search_label(regexes, label)
+
 
 # Anatomy, other
 def is_anatomy(label):
@@ -58,6 +62,7 @@ def is_anatomy(label):
         re.compile('flair', re.IGNORECASE)
     ]
     return regex_search_label(regexes, label)
+
 
 # Diffusion
 def is_diffusion(label):
@@ -71,6 +76,7 @@ def is_diffusion(label):
         ]
     return regex_search_label(regexes, label)
 
+
 # Diffusion - Derived
 def is_diffusion_derived(label):
     regexes = [
@@ -81,6 +87,7 @@ def is_diffusion_derived(label):
         re.compile('_EXP$', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
+
 
 # Functional
 def is_functional(label):
@@ -118,6 +125,7 @@ def is_functional(label):
         ]
     return regex_search_label(regexes, label)
 
+
 # Functional, Derived
 def is_functional_derived(label):
     regexes = [
@@ -128,6 +136,7 @@ def is_functional_derived(label):
         re.compile('StartFMRI', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
+
 
 # Localizer
 def is_localizer(label):
@@ -146,15 +155,17 @@ def is_localizer(label):
         ]
     return regex_search_label(regexes, label)
 
+
 # Shim
 def is_shim(label):
     regexes = [
-        re.compile('(?=.*HO)(?=.*shim)', re.IGNORECASE), # Contians 'ho' and 'shim'
+        re.compile('(?=.*HO)(?=.*shim)', re.IGNORECASE),  # Contians 'ho' and 'shim'
         re.compile(r'\bHOS\b', re.IGNORECASE),
         re.compile('_HOS_', re.IGNORECASE),
         re.compile('.*shim', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
+
 
 # Fieldmap
 def is_fieldmap(label):
@@ -169,6 +180,7 @@ def is_fieldmap(label):
         ]
     return regex_search_label(regexes, label)
 
+
 # Calibration
 def is_calibration(label):
     regexes = [
@@ -178,12 +190,14 @@ def is_calibration(label):
         ]
     return regex_search_label(regexes, label)
 
+
 # Coil Survey
 def is_coil_survey(label):
     regexes = [
         re.compile('(?=.*coil)(?=.*survey)', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
+
 
 # Perfusion: Arterial Spin Labeling
 def is_perfusion(label):
@@ -197,6 +211,7 @@ def is_perfusion(label):
         ]
     return regex_search_label(regexes, label)
 
+
 # Proton Density
 def is_proton_density(label):
     regexes = [
@@ -207,6 +222,7 @@ def is_proton_density(label):
         ]
     return regex_search_label(regexes, label)
 
+
 # Phase Map
 def is_phase_map(label):
     regexes = [
@@ -214,6 +230,7 @@ def is_phase_map(label):
         re.compile('^phase$', re.IGNORECASE)
         ]
     return regex_search_label(regexes, label)
+
 
 # Screen Save / Screenshot
 def is_screenshot(label):
@@ -225,13 +242,13 @@ def is_screenshot(label):
     return regex_search_label(regexes, label)
 
 
-
 # Utility:  Check a list of regexes for truthyness
 def regex_search_label(regexes, label):
     if any(regex.search(label) for regex in regexes):
             return True
     else:
             return False
+
 
 # Spectroscopy
 def is_spectroscopy(label):
@@ -305,6 +322,6 @@ def infer_classification(label):
         elif is_screenshot(label):
             classification['Intent'] = ['Screenshot']
         else:
-            print label.strip('\n') + ' --->>>> unknown'
+            print(label.strip('\n') + ' --->>>> unknown')
 
     return classification

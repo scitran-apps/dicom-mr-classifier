@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import os
 import re
@@ -10,6 +10,7 @@ import tzlocal
 import logging
 import zipfile
 import datetime
+import nibabel
 import classification_from_label
 from fnmatch import fnmatch
 from pprint import pprint
@@ -17,12 +18,14 @@ from pprint import pprint
 logging.basicConfig()
 log = logging.getLogger('dicom-mr-classifier')
 
+
 def get_session_label(dcm):
     """
     Switch on manufacturer and either pull out the StudyID or the StudyInstanceUID
     """
-    session_label = ''
-    if ( dcm.get('Manufacturer') and (dcm.get('Manufacturer').find('GE') != -1 or dcm.get('Manufacturer').find('Philips') != -1 ) and dcm.get('StudyID')):
+
+    if dcm.get('Manufacturer') and (dcm.get('Manufacturer').find('GE') != -1
+                                    or dcm.get('Manufacturer').find('Philips') != -1) and dcm.get('StudyID'):
         session_label = dcm.get('StudyID')
     else:
         session_label = dcm.get('StudyInstanceUID')
@@ -155,16 +158,17 @@ def assign_type(s):
     """
     Sets the type of a given input.
     """
-    if type(s) == dicom.valuerep.PersonName or type(s) == dicom.valuerep.PersonName3 or type(s) == dicom.valuerep.PersonNameBase:
+    person_name_type_list = [dicom.valuerep.PersonName, dicom.valuerep.PersonName3, dicom.valuerep.PersonNameBase]
+    if type(s) in person_name_type_list:
         return format_string(s)
     if type(s) == list or type(s) == dicom.multival.MultiValue:
         try:
-            return [ int(x) for x in s ]
+            return [int(x) for x in s]
         except ValueError:
             try:
-                return [ float(x) for x in s ]
+                return [float(x) for x in s]
             except ValueError:
-                return [ format_string(x) for x in s if len(x) > 0 ]
+                return [format_string(x) for x in s if len(x) > 0]
     else:
         s = str(s)
         try:
@@ -177,11 +181,11 @@ def assign_type(s):
 
 
 def format_string(in_string):
-    formatted = re.sub(r'[^\x00-\x7f]',r'', str(in_string)) # Remove non-ascii characters
-    formatted = filter(lambda x: x in string.printable, formatted)
+    formatted = re.sub(r'[^\x00-\x7f]', r'', str(in_string))  # Remove non-ascii characters
+    formatted = ''.join(filter(lambda x: x in string.printable, formatted))
     if len(formatted) == 1 and formatted == '?':
         formatted = None
-    return formatted#.encode('utf-8').strip()
+    return formatted
 
 
 def get_seq_data(sequence, ignore_keys):
@@ -207,18 +211,20 @@ def get_seq_data(sequence, ignore_keys):
 
     return seq_dict
 
+
 def get_dicom_header(dcm):
     # Extract the header values
     header = {}
-    exclude_tags = ['[Unknown]', 'PixelData', 'Pixel Data',  '[User defined data]', '[Protocol Data Block (compressed)]', '[Histogram tables]', '[Unique image iden]']
+    exclude_tags = ['[Unknown]', 'PixelData', 'Pixel Data',  '[User defined data]',
+                    '[Protocol Data Block (compressed)]', '[Histogram tables]', '[Unique image iden]']
     tags = dcm.dir()
     for tag in tags:
         try:
-            if (tag not in exclude_tags) and ( type(dcm.get(tag)) != dicom.sequence.Sequence ):
+            if (tag not in exclude_tags) and (type(dcm.get(tag)) != dicom.sequence.Sequence):
                 value = dcm.get(tag)
-                if value or value == 0: # Some values are zero
+                if value or value == 0:  # Some values are zero
                     # Put the value in the header
-                    if type(value) == str and len(value) < 10240: # Max dicom field length
+                    if type(value) == str and len(value) < 10240:  # Max dicom field length
                         header[tag] = format_string(value)
                     else:
                         header[tag] = assign_type(value)
@@ -235,9 +241,9 @@ def get_dicom_header(dcm):
             pass
     return header
 
+
 def get_csa_header(dcm):
-    import dicom
-    import nibabel.nicom.dicomwrappers
+
     exclude_tags = ['PhoenixZIP', 'SrMsgBuffer']
     header = {}
     try:
@@ -255,7 +261,7 @@ def get_csa_header(dcm):
             value = raw_csa_header['tags'][tag]['items']
             if len(value) == 1:
                 value = value[0]
-                if type(value) == str and ( len(value) > 0 and len(value) < 1024 ):
+                if type(value) == str and (1024 > len(value) > 0):
                     header[format_string(tag)] = format_string(value)
                 else:
                     header[format_string(tag)] = assign_type(value)
@@ -263,6 +269,7 @@ def get_csa_header(dcm):
                 header[format_string(tag)] = assign_type(value)
 
     return header
+
 
 def get_classification_from_string(value):
     result = {}
@@ -279,7 +286,7 @@ def get_classification_from_string(value):
             if last_key:
                 key = last_key
             else:
-                log.warn('Unknown classification format: {0}'.format(part))
+                log.warning('Unknown classification format: {0}'.format(part))
                 key = 'Custom'
             value = part
 
@@ -289,6 +296,7 @@ def get_classification_from_string(value):
         result[key].append(value)
 
     return result
+
 
 def get_custom_classification(label, config_file):
     if config_file is None or not os.path.isfile(config_file):
@@ -311,8 +319,8 @@ def get_custom_classification(label, config_file):
         for k in classifications.keys():
             val = classifications[k]
 
-            if not isinstance(val, basestring):
-                log.warn('Expected string value for classification key %s', k)
+            if not isinstance(val, str):
+                log.warning('Expected string value for classification key %s', k)
                 continue
 
             if len(k) > 2 and k[0] == '/' and k[-1] == '/':
@@ -341,7 +349,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
 
     # Check for input file path
     if not os.path.exists(zip_file_path):
-        log.debug('could not find %s' %  zip_file_path)
+        log.debug('could not find %s' % zip_file_path)
         log.debug('checking input directory ...')
         if os.path.exists(os.path.join('/input', zip_file_path)):
             zip_file_path = os.path.join('/input', zip_file_path)
@@ -354,10 +362,10 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
     # Extract the last file in the zip to /tmp/ and read it
     dcm = []
     if zipfile.is_zipfile(zip_file_path):
-        zip = zipfile.ZipFile(zip_file_path)
-        num_files = len(zip.namelist())
-        for n in range((num_files -1), -1, -1):
-            dcm_path = zip.extract(zip.namelist()[n], '/tmp')
+        zip_obj = zipfile.ZipFile(zip_file_path)
+        num_files = len(zip_obj.namelist())
+        for n in range((num_files - 1), -1, -1):
+            dcm_path = zip_obj.extract(zip_obj.namelist()[n], '/tmp')
             if os.path.isfile(dcm_path):
                 try:
                     log.info('reading %s' % dcm_path)
@@ -366,7 +374,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
                     # are other DICOM files in the zip then we read the next one,
                     # if this is the only class of DICOM in the file, we accept
                     # our fate and move on.
-                    if dcm.get('SOPClassUID') == 'Raw Data Storage' and n != range((num_files -1), -1, -1)[-1]:
+                    if dcm.get('SOPClassUID') == 'Raw Data Storage' and n != range((num_files - 1), -1, -1)[-1]:
                         continue
                     else:
                         break
@@ -384,11 +392,11 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
         os.sys.exit(1)
 
     # Build metadata
-    metadata = {}
+    metadata = dict()
 
     # Session metadata
     metadata['session'] = {}
-    session_timestamp, acquisition_timestamp = get_timestamp(dcm, timezone);
+    session_timestamp, acquisition_timestamp = get_timestamp(dcm, timezone)
     if session_timestamp:
         metadata['session']['timestamp'] = session_timestamp
     if hasattr(dcm, 'OperatorsName') and dcm.get('OperatorsName'):
@@ -431,7 +439,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
                 metadata['session']['subject']['firstname'] = str(first)
 
     # File classification
-    dicom_file = {}
+    dicom_file = dict()
     dicom_file['name'] = os.path.basename(zip_file_path)
     dicom_file['modality'] = format_string(dcm.get('Modality', 'MR'))
     dicom_file['classification'] = {}
@@ -477,7 +485,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
             metadata['acquisition']['metadata']['CSAHeader'] = csa_header
 
     # Write out the metadata to file (.metadata.json)
-    metafile_outname = os.path.join(os.path.dirname(outbase),'.metadata.json')
+    metafile_outname = os.path.join(os.path.dirname(outbase), '.metadata.json')
     with open(metafile_outname, 'w') as metafile:
         json.dump(metadata, metafile)
 
