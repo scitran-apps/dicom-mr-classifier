@@ -11,7 +11,6 @@ RUN_SCRIPT=$FLYWHEEL_BASE/run_classifier
 
 # Set Permissions for flywheel user to set timezone
 chown flywheel /etc/timezone
-cp ${FLYWHEEL_BASE}/classification_from_label.py /tmp
 echo "flywheel ALL=(ALL) NOPASSWD: /usr/sbin/dpkg-reconfigure" >> /etc/sudoers
 echo "flywheel ALL=(ALL) NOPASSWD: /bin/ln" >> /etc/sudoers
 
