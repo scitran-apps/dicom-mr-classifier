@@ -159,12 +159,11 @@ def assign_type(s):
         return format_string(s)
     if type(s) == list or type(s) == dicom.multival.MultiValue:
         try:
-            return [ int(x) for x in s ]
+            return [ int(x) if type(x) == int else float(x) for x in s ]
         except ValueError:
-            try:
-                return [ float(x) for x in s ]
-            except ValueError:
-                return [ format_string(x) for x in s if len(x) > 0 ]
+            return [ format_string(x) for x in s if len(x) > 0 ]
+    elif type(s) == float or type(s) == int:
+        return s
     else:
         s = str(s)
         try:
@@ -438,6 +437,9 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
 
     # Acquisition metadata
     metadata['acquisition'] = {}
+    if acquisition_timestamp:
+        metadata['acquisition']['timestamp'] = acquisition_timestamp
+
     if hasattr(dcm, 'Modality') and dcm.get('Modality'):
         metadata['acquisition']['instrument'] = format_string(dcm.get('Modality'))
 
@@ -460,21 +462,18 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
         # Else classification is a list, assign dict with intent
         else:
             dicom_file['classification'] = nonimage_intent
-    if acquisition_timestamp:
-        metadata['acquisition']['timestamp'] = acquisition_timestamp
 
-    # Acquisition metadata from dicom header
+    # File info from dicom header
     dicom_file['info'] = get_dicom_header(dcm)
 
-    # Append the dicom_file to the files array
-    metadata['acquisition']['files'] = [dicom_file]
-
-    # Acquisition metadata from dicom header
-    metadata['acquisition']['metadata'] = get_dicom_header(dcm)
+    # Grab CSA header for Siemens data
     if dcm.get('Manufacturer') == 'SIEMENS':
         csa_header = get_csa_header(dcm)
         if csa_header:
-            metadata['acquisition']['metadata']['CSAHeader'] = csa_header
+            dicom_file['info']['CSAHeader'] = csa_header
+
+    # Append the dicom_file to the files array
+    metadata['acquisition']['files'] = [dicom_file]
 
     # Write out the metadata to file (.metadata.json)
     metafile_outname = os.path.join(os.path.dirname(outbase),'.metadata.json')
