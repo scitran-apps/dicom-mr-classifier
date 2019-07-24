@@ -396,6 +396,8 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
     session_label = get_session_label(dcm)
     if session_label:
         metadata['session']['label'] = session_label
+    if hasattr(dcm, 'PatientWeight') and dcm.get('PatientWeight'):
+        metadata['session']['weight'] = dcm.get('PatientWeight')
 
     # Subject Metadata
     metadata['session']['subject'] = {}
