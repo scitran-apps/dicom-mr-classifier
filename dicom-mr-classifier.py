@@ -188,7 +188,7 @@ def get_seq_data(sequence, ignore_keys):
     for seq in sequence:
         for s_key in seq.dir():
             s_val = getattr(seq, s_key, '')
-            if type(s_val) is dicom.UID.UID or s_key in ignore_keys:
+            if type(s_val) is dicom.uid.UID or s_key in ignore_keys:
                 continue
 
             if type(s_val) == dicom.sequence.Sequence:
