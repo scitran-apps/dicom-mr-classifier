@@ -42,24 +42,6 @@ sudo dpkg-reconfigure -f noninteractive tzdata
 
 
 ##############################################################################
-# Handle sync option
-
-SYNC=$(parse_config 'sync')
-if [[ ${SYNC} == "true" ]]; then
-  echo -e "$CONTAINER  Syncing classification code from scitran-apps/dicom-mr-classifier/sync-classification-e4..."
-  wget --quiet -O ${FLYWHEEL_BASE}/classification_from_label.py \
-      https://raw.githubusercontent.com/scitran-apps/dicom-mr-classifier/sync-classification-e4/classification_from_label.py
-  STAT_GET=$?
-  if [[ $STAT_GET != 0 ]]; then
-    echo -e "$CONTAINER Error during sync!"
-  else
-    chmod +x ${FLYWHEEL_BASE}/classification_from_label.py
-  fi
-else
-  echo -e "$CONTAINER  Not syncing classification code. Using built-in version..."
-fi
-
-##############################################################################
 # Check I/O directories and Generate metadata
 
 # Check that /output directory is empty
