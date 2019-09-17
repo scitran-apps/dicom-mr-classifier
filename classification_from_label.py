@@ -62,9 +62,15 @@ def _find_matches(label, list):
 
 def _compile_regex(string):
     """Generate the regex for label checking"""
-
-    regex = re.compile(r"(\b%s\b)|(_%s_)|(_%s)|(%s_)" % (string,string,string,string), re.IGNORECASE)
-
+    # Escape * for T2*
+    if string == 'T2*':
+        string = 'T2\*'
+        regex = re.compile(r"(\b%s\b)|(_%s_)|(_%s)|(%s_)|(t2star)" % (string,string,string,string), re.IGNORECASE)
+    # Prevent T2 from capturing T2*
+    elif string == 'T2':
+        regex = re.compile(r"(\b%s\b)|(_%s_)|(_%s$)|(%s_)" % (string,string,string,string), re.IGNORECASE)
+    else:
+        regex = re.compile(r"(\b%s\b)|(_%s_)|(_%s)|(%s_)" % (string,string,string,string), re.IGNORECASE)
     return regex
 
 
@@ -86,7 +92,7 @@ def is_anatomy_t1(label):
 # Anatomy, T2
 def is_anatomy_t2(label):
     regexes = [
-        re.compile('t2', re.IGNORECASE)
+        re.compile('t2[^*]*$', re.IGNORECASE)
     ]
     return regex_search_label(regexes, label)
 
