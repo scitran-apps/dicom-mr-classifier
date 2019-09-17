@@ -10,9 +10,9 @@
   "flywheel": "0",
   "version": "1.2.2",
   "custom": {
-    "docker-image": "scitran/dicom-mr-classifier:1.2.1",
+    "docker-image": "scitran/dicom-mr-classifier:1.2.2",
     "gear-builder": {
-      "image": "scitran/dicom-mr-classifier:1.2.1",
+      "image": "scitran/dicom-mr-classifier:1.2.2",
       "category": "converter"
     },
     "flywheel": {
