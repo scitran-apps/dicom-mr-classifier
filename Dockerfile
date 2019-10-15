@@ -24,6 +24,7 @@ RUN apt-get update && apt-get -y install \
 
 # Install scitran.data dependencies
 RUN pip install \
+  numpy==1.15.1 \
   pydicom==0.9.9 \
   python-dateutil==2.6.0 \
   pytz==2017.2 \
