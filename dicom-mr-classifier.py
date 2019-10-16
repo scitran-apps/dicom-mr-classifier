@@ -289,54 +289,56 @@ def get_classification_from_string(value):
 
     return result
 
-def get_custom_classification(label, config_file):
-    if config_file is None or not os.path.isfile(config_file):
+def get_custom_classification(label, config=None):
+    if config is None:
         return None
 
-    try:
-        with open(config_file, 'r') as f:
-            config = json.load(f)
+    # Check custom classifiers
+    classifications = config['inputs'].get('classifications', {}).get('value', {})
+    if not classifications:
+        log.debug('No custom classifications found in config')
+        return None
 
-        # Check custom classifiers
-        classifications = config['inputs'].get('classifications', {}).get('value', {})
-        if not classifications:
-            log.debug('No custom classifications found in config')
-            return None
+    if not isinstance(classifications, dict):
+        log.warning('classifications must be an object!')
+        return None
 
-        if not isinstance(classifications, dict):
-            log.warning('classifications must be an object!')
-            return None
+    for k in classifications.keys():
+        val = classifications[k]
 
-        for k in classifications.keys():
-            val = classifications[k]
+        if not isinstance(val, basestring):
+            log.warn('Expected string value for classification key %s', k)
+            continue
 
-            if not isinstance(val, basestring):
-                log.warn('Expected string value for classification key %s', k)
-                continue
-
-            if len(k) > 2 and k[0] == '/' and k[-1] == '/':
-                # Regex
-                try:
-                    if re.search(k[1:-1], label, re.I):
-                        log.debug('Matched custom classification for key: %s', k)
-                        return get_classification_from_string(val)
-                except re.error:
-                    log.exception('Invalid regular expression: %s', k)
-            elif fnmatch(label.lower(), k.lower()):
-                log.debug('Matched custom classification for key: %s', k)
-                return get_classification_from_string(val)
-
-    except IOError:
-        log.exception('Unable to load config file: %s', config_file)
+        if len(k) > 2 and k[0] == '/' and k[-1] == '/':
+            # Regex
+            try:
+                if re.search(k[1:-1], label, re.I):
+                    log.debug('Matched custom classification for key: %s', k)
+                    return get_classification_from_string(val)
+            except re.error:
+                log.exception('Invalid regular expression: %s', k)
+        elif fnmatch(label.lower(), k.lower()):
+            log.debug('Matched custom classification for key: %s', k)
+            return get_classification_from_string(val)
 
     return None
 
 
-def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
+def dicom_classify(zip_file_path, outbase, timezone, config=None):
     """
     Extracts metadata from dicom file header within a zip file and writes to .metadata.json.
     """
     import dicom
+
+    # Parse config for options
+    if config:
+        config_force = config['config'].get('force')
+        if config_force:
+            log.warning('Attempting to force DICOM read. Input DICOM may not be valid.')
+    else:
+        config_force = False
+
 
     # Check for input file path
     if not os.path.exists(zip_file_path):
@@ -360,7 +362,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
             if os.path.isfile(dcm_path):
                 try:
                     log.info('reading %s' % dcm_path)
-                    dcm = dicom.read_file(dcm_path)
+                    dcm = dicom.read_file(dcm_path, force=config_force)
                     # Here we check for the Raw Data Storage SOP Class, if there
                     # are other DICOM files in the zip then we read the next one,
                     # if this is the only class of DICOM in the file, we accept
@@ -379,7 +381,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
 
 
     if not dcm:
-        log.warning('dcm is empty!!!')
+        log.warning('DICOM could not be read! Is this a valid DICOM file? To force parsing the file, run again setting "force" configuration option to "true"')
         os.sys.exit(1)
 
     # Build metadata
@@ -449,7 +451,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config_file=None):
     series_desc = format_string(dcm.get('SeriesDescription', ''))
     if series_desc:
         metadata['acquisition']['label'] = series_desc
-        classification = get_custom_classification(series_desc, config_file)
+        classification = get_custom_classification(series_desc, config)
         log.info('Custom classification from config: %s', classification)
         if not classification:
             classification = classification_from_label.infer_classification(series_desc)
@@ -498,7 +500,7 @@ if __name__ == '__main__':
     ap.add_argument('dcmzip', help='path to dicom zip')
     ap.add_argument('outbase', nargs='?', help='outfile name prefix')
     ap.add_argument('--log_level', help='logging level', default='info')
-    ap.add_argument('--config-file', help='Configuration file with custom classifications in context')
+    ap.add_argument('--config-file', default='/flywheel/v0/config.json', help='Configuration file with custom classifications in context')
     args = ap.parse_args()
 
     log.setLevel(getattr(logging, args.log_level.upper()))
@@ -507,7 +509,14 @@ if __name__ == '__main__':
 
     args.timezone = validate_timezone(tzlocal.get_localzone())
 
-    metadatafile = dicom_classify(args.dcmzip, args.outbase, args.timezone, config_file=args.config_file)
+    # Load config from file
+    if args.config_file and os.path.isfile(args.config_file):
+        with open(args.config_file) as json_file:
+            config = json.load(json_file)
+    else:
+        config = None
+
+    metadatafile = dicom_classify(args.dcmzip, args.outbase, args.timezone, config)
 
     if os.path.exists(metadatafile):
         log.info('generated %s' % metadatafile)
