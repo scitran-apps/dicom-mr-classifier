@@ -17,6 +17,8 @@ from pprint import pprint
 logging.basicConfig()
 log = logging.getLogger("dicom-mr-classifier")
 
+DEFAULT_TME = '120000.00'
+
 
 def get_session_label(dcm):
     """
@@ -104,49 +106,104 @@ def timestamp(date, time, timezone):
 
 def get_timestamp(dcm, timezone):
     """
-    Parse Study Date and Time, return acquisition and session timestamps
+    Parse Study Date and Time, return acquisition and session timestamps.
+
+    For study date/time Dicom tag used by order of priority goes like a:
+        - StudyDate/StudyTime
+        - SeriesDate/SeriesTime
+        - AcquisitionDate/AcquisitionTime
+        - AcquisitionDateTime
+        - StudyDate and Time defaults to DEFAULT_TME
+        - SeriesDates and Time defaults to DEFAULT_TME
+        - AcquisitionDate and Time defaults to DEFAULT_TME
+
+    For acquisition date/time Dicom tag used by order of priority goes like a:
+        - SeriesDate/SeriesTime
+        - AcquisitionDate/AcquisitionTime
+        - AcquisitionDateTime
+        - ContentDate/ContentTime
+        - StudyDate/StudyTime
+        - SeriesDate and Time defaults to DEFAULT_TME
+        - AcquisitionDate and Time defaults to DEFAULT_TME
+        - StudyDate and Time defaults to DEFAULT_TME
     """
-    if hasattr(dcm, "StudyDate") and hasattr(dcm, "StudyTime"):
+    # Study Date and Time, with precedence as below
+    if getattr(dcm, 'StudyDate', None) and getattr(dcm, 'StudyTime', None):
         study_date = dcm.StudyDate
         study_time = dcm.StudyTime
-    elif hasattr(dcm, "StudyDateTime"):
-        study_date = dcm.StudyDateTime[0:8]
-        study_time = dcm.StudyDateTime[8:]
+    elif getattr(dcm, 'SeriesDate', None) and getattr(dcm, 'SeriesTime', None):
+        study_date = dcm.SeriesDate
+        study_time = dcm.SeriesTime
+    elif getattr(dcm, 'AcquisitionDate', None) and getattr(dcm, 'AcquisitionTime', None):
+        study_date = dcm.AcquisitionDate
+        study_time = dcm.AcquisitionTime
+    elif getattr(dcm, 'AcquisitionDateTime', None):
+        study_date = dcm.AcquisitionDateTime[0:8]
+        study_time = dcm.AcquisitionDateTime[8:]
+    # If only Dates are available setting time to 00:00
+    elif getattr(dcm, 'StudyDate', None):
+        study_date = dcm.StudyDate
+        study_time = DEFAULT_TME
+    elif getattr(dcm, 'SeriesDate', None):
+        study_date = dcm.SeriesDate
+        study_time = DEFAULT_TME
+    elif getattr(dcm, 'AcquisitionDate', None):
+        study_date = dcm.AcquisitionDate
+        study_time = DEFAULT_TME
     else:
         study_date = None
         study_time = None
 
-    if hasattr(dcm, "AcquisitionDate") and hasattr(dcm, "AcquisitionTime"):
-        acquitision_date = dcm.AcquisitionDate
+    # Acquisition Date and Time, with precedence as below
+    if getattr(dcm, 'SeriesDate', None) and getattr(dcm, 'SeriesTime', None):
+        acquisition_date = dcm.SeriesDate
+        acquisition_time = dcm.SeriesTime
+    elif getattr(dcm, 'AcquisitionDate', None) and getattr(dcm, 'AcquisitionTime', None):
+        acquisition_date = dcm.AcquisitionDate
         acquisition_time = dcm.AcquisitionTime
-    elif hasattr(dcm, "AcquisitionDateTime"):
-        acquitision_date = dcm.AcquisitionDateTime[0:8]
+    elif getattr(dcm, 'AcquisitionDateTime', None):
+        acquisition_date = dcm.AcquisitionDateTime[0:8]
         acquisition_time = dcm.AcquisitionDateTime[8:]
     # The following allows the timestamps to be set for ScreenSaves
-    elif hasattr(dcm, "ContentDate") and hasattr(dcm, "ContentTime"):
-        acquitision_date = dcm.ContentDate
+    elif getattr(dcm, 'ContentDate', None) and getattr(dcm, 'ContentTime', None):
+        acquisition_date = dcm.ContentDate
         acquisition_time = dcm.ContentTime
+    # Looking deeper if nothing found so far
+    elif getattr(dcm, 'StudyDate', None) and getattr(dcm, 'StudyTime', None):
+        acquisition_date = dcm.StudyDate
+        acquisition_time = dcm.StudyTime
+    # If only Dates are available setting time to 00:00
+    elif getattr(dcm, 'SeriesDate', None):
+        acquisition_date = dcm.SeriesDate
+        acquisition_time = DEFAULT_TME
+    elif getattr(dcm, 'AcquisitionDate', None):
+        acquisition_date = dcm.AcquisitionDate
+        acquisition_time = DEFAULT_TME
+    elif getattr(dcm, 'StudyDate', None):
+        acquisition_date = dcm.StudyDate
+        acquisition_time = DEFAULT_TME
+
     else:
-        acquitision_date = None
+        acquisition_date = None
         acquisition_time = None
 
     session_timestamp = timestamp(study_date, study_time, timezone)
-    acquisition_timestamp = timestamp(acquitision_date, acquisition_time, timezone)
+    acquisition_timestamp = timestamp(acquisition_date, acquisition_time, timezone)
 
     if session_timestamp:
         if session_timestamp.tzinfo is None:
-            log.info("no tzinfo found, using UTC...")
-            session_timestamp = pytz.timezone("UTC").localize(session_timestamp)
+            log.info('no tzinfo found, using UTC...')
+            session_timestamp = pytz.timezone('UTC').localize(session_timestamp)
         session_timestamp = session_timestamp.isoformat()
     else:
-        session_timestamp = ""
+        session_timestamp = ''
     if acquisition_timestamp:
         if acquisition_timestamp.tzinfo is None:
-            log.info("no tzinfo found, using UTC")
-            acquisition_timestamp = pytz.timezone("UTC").localize(acquisition_timestamp)
+            log.info('no tzinfo found, using UTC')
+            acquisition_timestamp = pytz.timezone('UTC').localize(acquisition_timestamp)
         acquisition_timestamp = acquisition_timestamp.isoformat()
     else:
-        acquisition_timestamp = ""
+        acquisition_timestamp = ''
     return session_timestamp, acquisition_timestamp
 
 
