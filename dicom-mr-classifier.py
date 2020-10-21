@@ -12,7 +12,7 @@ import zipfile
 import datetime
 import classification_from_label
 from fnmatch import fnmatch
-from pprint import pprint
+import pprint
 
 logging.basicConfig()
 log = logging.getLogger("dicom-mr-classifier")
@@ -565,7 +565,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         json.dump(metadata, metafile)
 
     # Show the metadata
-    pprint(metadata)
+    log.info(pprint.pformat(metadata))
 
     return metafile_outname
 
