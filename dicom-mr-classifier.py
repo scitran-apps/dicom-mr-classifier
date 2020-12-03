@@ -17,7 +17,7 @@ from pprint import pprint
 logging.basicConfig()
 log = logging.getLogger("dicom-mr-classifier")
 
-DEFAULT_TME = '120000.00'
+DEFAULT_TIME = '120000.00'
 
 
 def get_session_label(dcm):
@@ -113,9 +113,9 @@ def get_timestamp(dcm, timezone):
         - SeriesDate/SeriesTime
         - AcquisitionDate/AcquisitionTime
         - AcquisitionDateTime
-        - StudyDate and Time defaults to DEFAULT_TME
-        - SeriesDates and Time defaults to DEFAULT_TME
-        - AcquisitionDate and Time defaults to DEFAULT_TME
+        - StudyDate and Time defaults to DEFAULT_TIME
+        - SeriesDates and Time defaults to DEFAULT_TIME
+        - AcquisitionDate and Time defaults to DEFAULT_TIME
 
     For acquisition date/time Dicom tag used by order of priority goes like a:
         - SeriesDate/SeriesTime
@@ -123,9 +123,9 @@ def get_timestamp(dcm, timezone):
         - AcquisitionDateTime
         - ContentDate/ContentTime
         - StudyDate/StudyTime
-        - SeriesDate and Time defaults to DEFAULT_TME
-        - AcquisitionDate and Time defaults to DEFAULT_TME
-        - StudyDate and Time defaults to DEFAULT_TME
+        - SeriesDate and Time defaults to DEFAULT_TIME
+        - AcquisitionDate and Time defaults to DEFAULT_TIME
+        - StudyDate and Time defaults to DEFAULT_TIME
     """
     # Study Date and Time, with precedence as below
     if getattr(dcm, 'StudyDate', None) and getattr(dcm, 'StudyTime', None):
@@ -146,16 +146,16 @@ def get_timestamp(dcm, timezone):
     # If only Dates are available setting time to 00:00
     elif getattr(dcm, 'StudyDate', None):
         study_date = dcm.StudyDate
-        study_time = DEFAULT_TME
+        study_time = DEFAULT_TIME
     elif getattr(dcm, 'SeriesDate', None):
         study_date = dcm.SeriesDate
-        study_time = DEFAULT_TME
+        study_time = DEFAULT_TIME
     elif getattr(dcm, 'AcquisitionDate', None):
         study_date = dcm.AcquisitionDate
-        study_time = DEFAULT_TME
+        study_time = DEFAULT_TIME
     elif getattr(dcm, 'InstanceCreationDate', None):
         study_date = dcm.InstanceCreationDate
-        study_time = DEFAULT_TME
+        study_time = DEFAULT_TIME
     else:
         study_date = None
         study_time = None
@@ -184,16 +184,16 @@ def get_timestamp(dcm, timezone):
     # If only Dates are available setting time to 00:00
     elif getattr(dcm, 'SeriesDate', None):
         acquisition_date = dcm.SeriesDate
-        acquisition_time = DEFAULT_TME
+        acquisition_time = DEFAULT_TIME
     elif getattr(dcm, 'AcquisitionDate', None):
         acquisition_date = dcm.AcquisitionDate
-        acquisition_time = DEFAULT_TME
+        acquisition_time = DEFAULT_TIME
     elif getattr(dcm, 'StudyDate', None):
         acquisition_date = dcm.StudyDate
-        acquisition_time = DEFAULT_TME
+        acquisition_time = DEFAULT_TIME
     elif getattr(dcm, 'InstanceCreationDate', None):
         acquisition_date = dcm.InstanceCreationDate
-        acquisition_time = DEFAULT_TME
+        acquisition_time = DEFAULT_TIME
 
     else:
         acquisition_date = None
