@@ -140,6 +140,9 @@ def get_timestamp(dcm, timezone):
     elif getattr(dcm, 'AcquisitionDateTime', None):
         study_date = dcm.AcquisitionDateTime[0:8]
         study_time = dcm.AcquisitionDateTime[8:]
+    elif getattr(dcm, 'StudyTime', None) and getattr(dcm, 'InstanceCreationDate', None):
+        study_date = dcm.InstanceCreationDate
+        study_time = dcm.StudyTime
     # If only Dates are available setting time to 00:00
     elif getattr(dcm, 'StudyDate', None):
         study_date = dcm.StudyDate
@@ -149,6 +152,9 @@ def get_timestamp(dcm, timezone):
         study_time = DEFAULT_TME
     elif getattr(dcm, 'AcquisitionDate', None):
         study_date = dcm.AcquisitionDate
+        study_time = DEFAULT_TME
+    elif getattr(dcm, 'InstanceCreationDate', None):
+        study_date = dcm.InstanceCreationDate
         study_time = DEFAULT_TME
     else:
         study_date = None
@@ -172,6 +178,9 @@ def get_timestamp(dcm, timezone):
     elif getattr(dcm, 'StudyDate', None) and getattr(dcm, 'StudyTime', None):
         acquisition_date = dcm.StudyDate
         acquisition_time = dcm.StudyTime
+    elif getattr(dcm, 'InstanceCreationDate', None) and getattr(dcm, 'InstanceCreationTime', None):
+        acquisition_date = dcm.InstanceCreationDate
+        acquisition_time = dcm.InstanceCreationTime
     # If only Dates are available setting time to 00:00
     elif getattr(dcm, 'SeriesDate', None):
         acquisition_date = dcm.SeriesDate
@@ -181,6 +190,9 @@ def get_timestamp(dcm, timezone):
         acquisition_time = DEFAULT_TME
     elif getattr(dcm, 'StudyDate', None):
         acquisition_date = dcm.StudyDate
+        acquisition_time = DEFAULT_TME
+    elif getattr(dcm, 'InstanceCreationDate', None):
+        acquisition_date = dcm.InstanceCreationDate
         acquisition_time = DEFAULT_TME
 
     else:
