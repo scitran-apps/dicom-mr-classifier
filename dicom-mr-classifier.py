@@ -540,6 +540,12 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
     dicom_file = {}
     dicom_file["name"] = os.path.basename(zip_file_path)
     dicom_file["modality"] = format_string(dcm.get("Modality", "MR") or "MR")
+    if dcm.get('Modality'):
+        pydicom_file["modality"] = format_string(dcm.get("Modality"))
+    else:
+        log.warning('No modality found.')
+        pydicom_file["modality"] = None
+
     dicom_file["classification"] = {}
 
     # Acquisition metadata
