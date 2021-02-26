@@ -539,7 +539,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
     # File classification
     dicom_file = {}
     dicom_file["name"] = os.path.basename(zip_file_path)
-    dicom_file["modality"] = format_string(dcm.get("Modality", "MR"))
+    dicom_file["modality"] = format_string(dcm.get("Modality", "MR") or "MR")
     dicom_file["classification"] = {}
 
     # Acquisition metadata
