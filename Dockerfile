@@ -10,22 +10,19 @@
 #        /data/outprefix
 #
 
-FROM ubuntu:trusty
+FROM python:3.7-buster
 
 MAINTAINER Michael Perry <lmperry@stanford.edu>
 
 # Install dependencies
 RUN apt-get update && apt-get -y install \
-    python \
-    python-dev \
-    python-pip \
     jq \
     wget
 
 # Install scitran.data dependencies
 RUN pip install \
-  numpy==1.15.1 \
-  pydicom==0.9.9 \
+  "numpy>1.15.0,<1.16.0" \
+  "pydicom>2.0.0,<3.0.0" \
   python-dateutil==2.6.0 \
   pytz==2017.2 \
   tzlocal==1.4 \

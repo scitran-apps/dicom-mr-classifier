@@ -368,7 +368,7 @@ def infer_classification(label):
         elif is_screenshot(label):
             classification['Intent'] = ['Screenshot']
         else:
-            print label.strip('\n') + ' --->>>> unknown'
+            print(label.strip('\n') + ' --->>>> unknown')
 
 
         # Add features to classification
