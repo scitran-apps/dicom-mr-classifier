@@ -529,7 +529,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
             log.warning('Could not parse PatientAge, droppping.')
             pass
     if hasattr(dcm, "PatientName") and isinstance(dcm.get('PatientName'),pydicom.valuerep.PersonName):
-        if hasattr(dcm, "PatientName") and dcm.get("PatientName").given_name:
+        if dcm.get("PatientName").given_name:
             # If the first name or last name field has a space-separated string, and one or the other field is not
             # present, then we assume that the operator put both first and last names in that one field. We then
             # parse that field to populate first and last name.
@@ -543,7 +543,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
                     last = name[1]
                     metadata["session"]["subject"]["lastname"] = str(last)
                     metadata["session"]["subject"]["firstname"] = str(first)
-        if hasattr(dcm, "PatientName") and dcm.get("PatientName").family_name:
+        if dcm.get("PatientName").family_name:
             metadata["session"]["subject"]["lastname"] = str(
                 format_string(dcm.get("PatientName").family_name)
             )
