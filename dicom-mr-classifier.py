@@ -495,7 +495,12 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         metadata["session"]["label"] = session_label
 
     if hasattr(dcm, "PatientWeight") and dcm.get("PatientWeight"):
-        metadata["session"]["weight"] = assign_type(dcm.get("PatientWeight"))
+        weight = assign_type(dcm.get("PatientWeight"))
+        try:
+            weight = float(weight)
+            metadata["session"]["weight"] = weight
+        except:
+            pass
 
     # Subject Metadata
     metadata["session"]["subject"] = {}
@@ -505,7 +510,8 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         try:
             age = parse_patient_age(dcm.get("PatientAge"))
             if age:
-                metadata["session"]["age"] = int(age)
+                age = int(age)
+                metadata["session"]["age"] = age
         except:
             pass
     if hasattr(dcm, "PatientName") and dcm.get("PatientName").given_name:
