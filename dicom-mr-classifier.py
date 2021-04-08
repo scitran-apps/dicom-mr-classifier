@@ -4,7 +4,7 @@ import os
 import re
 import json
 import pytz
-import dicom
+import pydicom
 import string
 import tzlocal
 import logging
@@ -237,12 +237,10 @@ def assign_type(s):
     Sets the type of a given input.
     """
     if (
-        type(s) == dicom.valuerep.PersonName
-        or type(s) == dicom.valuerep.PersonName3
-        or type(s) == dicom.valuerep.PersonNameBase
+        isinstance(s, pydicom.valuerep.PersonName)
     ):
         return format_string(s)
-    if type(s) == list or type(s) == dicom.multival.MultiValue:
+    if type(s) == list or type(s) == pydicom.multival.MultiValue:
         try:
             return [int(x) if type(x) == int else float(x) for x in s]
         except ValueError:
@@ -264,7 +262,7 @@ def format_string(in_string):
     formatted = re.sub(
         r"[^\x00-\x7f]", r"", str(in_string)
     )  # Remove non-ascii characters
-    formatted = filter(lambda x: x in string.printable, formatted)
+    formatted = "".join(filter(lambda x: x in string.printable, formatted))
     if len(formatted) == 1 and formatted == "?":
         formatted = None
     return formatted  # .encode('utf-8').strip()
@@ -275,10 +273,10 @@ def get_seq_data(sequence, ignore_keys):
     for seq in sequence:
         for s_key in seq.dir():
             s_val = getattr(seq, s_key, "")
-            if type(s_val) is dicom.uid.UID or s_key in ignore_keys:
+            if type(s_val) is pydicom.uid.UID or s_key in ignore_keys:
                 continue
 
-            if type(s_val) == dicom.sequence.Sequence:
+            if type(s_val) == pydicom.sequence.Sequence:
                 _seq = get_seq_data(s_val, ignore_keys)
                 seq_dict[s_key] = _seq
                 continue
@@ -310,7 +308,7 @@ def get_dicom_header(dcm):
     for tag in tags:
         try:
             if (tag not in exclude_tags) and (
-                type(dcm.get(tag)) != dicom.sequence.Sequence
+                type(dcm.get(tag)) != pydicom.sequence.Sequence
             ):
                 value = dcm.get(tag)
                 if value or value == 0:  # Some values are zero
@@ -324,7 +322,7 @@ def get_dicom_header(dcm):
                 else:
                     log.debug("No value found for tag: " + tag)
 
-            if type(dcm.get(tag)) == dicom.sequence.Sequence:
+            if type(dcm.get(tag)) == pydicom.sequence.Sequence:
                 seq_data = get_seq_data(dcm.get(tag), exclude_tags)
                 # Check that the sequence is not empty
                 if seq_data:
@@ -336,7 +334,7 @@ def get_dicom_header(dcm):
 
 
 def get_csa_header(dcm):
-    import dicom
+    import pydicom
     import nibabel.nicom.dicomwrappers
 
     exclude_tags = ["PhoenixZIP", "SrMsgBuffer"]
@@ -433,7 +431,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
     """
     Extracts metadata from dicom file header within a zip file and writes to .metadata.json.
     """
-    import dicom
+    import pydicom
 
     # Parse config for options
     if config:
@@ -465,7 +463,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
             if os.path.isfile(dcm_path):
                 try:
                     log.info("reading %s" % dcm_path)
-                    dcm = dicom.read_file(dcm_path, force=config_force)
+                    dcm = pydicom.dcmread(dcm_path, force=config_force)
                     # Here we check for the Raw Data Storage SOP Class, if there
                     # are other DICOM files in the zip then we read the next one,
                     # if this is the only class of DICOM in the file, we accept
@@ -486,7 +484,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
             "Not a zip. Attempting to read %s directly"
             % os.path.basename(zip_file_path)
         )
-        dcm = dicom.read_file(zip_file_path)
+        dcm = pydicom.dcmread(zip_file_path)
 
     if not dcm:
         log.warning(
@@ -509,7 +507,13 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         metadata["session"]["label"] = session_label
 
     if hasattr(dcm, "PatientWeight") and dcm.get("PatientWeight"):
-        metadata["session"]["weight"] = assign_type(dcm.get("PatientWeight"))
+        weight = assign_type(dcm.get("PatientWeight"))
+        try:
+            weight = float(weight)
+            metadata["session"]["weight"] = weight
+        except:
+            log.warning('Could not parse PatientWeight, droppping.')
+            pass
 
     # Subject Metadata
     metadata["session"]["subject"] = {}
@@ -519,8 +523,10 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         try:
             age = parse_patient_age(dcm.get("PatientAge"))
             if age:
-                metadata["session"]["subject"]["age"] = int(age)
+                age = int(age)
+                metadata["session"]["age"] = age
         except:
+            log.warning('Could not parse PatientAge, droppping.')
             pass
     if hasattr(dcm, "PatientName") and dcm.get("PatientName").given_name:
         # If the first name or last name field has a space-separated string, and one or the other field is not
@@ -551,7 +557,12 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
     # File classification
     dicom_file = {}
     dicom_file["name"] = os.path.basename(zip_file_path)
-    dicom_file["modality"] = format_string(dcm.get("Modality", "MR"))
+    if dcm.get('Modality'):
+        dicom_file["modality"] = format_string(dcm.get("Modality"))
+    else:
+        log.warning('No modality found.')
+        dicom_file["modality"] = None
+
     dicom_file["classification"] = {}
 
     # Acquisition metadata
