@@ -22,7 +22,7 @@ RUN apt-get update && apt-get -y install \
 # Install scitran.data dependencies
 RUN pip install \
   "numpy>1.15.0,<1.16.0" \
-  "pydicom>2.0.0,<3.0.0" \
+  pydicom==2.1.2 \
   python-dateutil==2.6.0 \
   pytz==2017.2 \
   tzlocal==1.4 \
