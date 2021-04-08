@@ -500,6 +500,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
             weight = float(weight)
             metadata["session"]["weight"] = weight
         except:
+            log.warning('Could not parse PatientWeight, droppping.')
             pass
 
     # Subject Metadata
@@ -513,6 +514,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
                 age = int(age)
                 metadata["session"]["age"] = age
         except:
+            log.warning('Could not parse PatientAge, droppping.')
             pass
     if hasattr(dcm, "PatientName") and dcm.get("PatientName").given_name:
         # If the first name or last name field has a space-separated string, and one or the other field is not
