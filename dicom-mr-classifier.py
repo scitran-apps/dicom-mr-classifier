@@ -587,7 +587,6 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
                 classification = {'Custom': ['N/A']}
         dicom_file["classification"] = classification
 
-
     # If no pixel data present, make classification intent "Non-Image"
     if not hasattr(dcm, "PixelData"):
         nonimage_intent = {"Intent": ["Non-Image"]}
@@ -606,7 +605,6 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         csa_header = get_csa_header(dcm)
         if csa_header:
             dicom_file["info"]["CSAHeader"] = csa_header
-    
     # Append the dicom_file to the files array
     metadata["acquisition"]["files"] = [dicom_file]
 
