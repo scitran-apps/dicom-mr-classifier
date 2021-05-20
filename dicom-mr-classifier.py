@@ -582,6 +582,9 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         if not classification:
             classification = classification_from_label.infer_classification(series_desc)
             log.info("Inferred classification from label: %s", classification)
+            # GEAR-1084, keep any custom classification already set.
+            if not classification:
+                classification = {'Custom': ['N/A']}
         dicom_file["classification"] = classification
 
 
@@ -603,9 +606,6 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         csa_header = get_csa_header(dcm)
         if csa_header:
             dicom_file["info"]["CSAHeader"] = csa_header
-
-    # GEAR-1084, keep any custom classification already set.
-    dicom_file["classification"].update(config["inputs"].get("classification", {}))
     
     # Append the dicom_file to the files array
     metadata["acquisition"]["files"] = [dicom_file]
