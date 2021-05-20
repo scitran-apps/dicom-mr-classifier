@@ -582,6 +582,9 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         if not classification:
             classification = classification_from_label.infer_classification(series_desc)
             log.info("Inferred classification from label: %s", classification)
+            # GEAR-1084, keep any custom classification already set.
+            if not classification:
+                classification = {'Custom': ['N/A']}
         dicom_file["classification"] = classification
 
     # If no pixel data present, make classification intent "Non-Image"
@@ -602,7 +605,6 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         csa_header = get_csa_header(dcm)
         if csa_header:
             dicom_file["info"]["CSAHeader"] = csa_header
-
     # Append the dicom_file to the files array
     metadata["acquisition"]["files"] = [dicom_file]
 
