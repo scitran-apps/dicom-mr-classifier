@@ -579,7 +579,7 @@ def dicom_classify(zip_file_path, outbase, timezone, config=None):
         metadata["acquisition"]["label"] = series_desc
         classification = get_custom_classification(series_desc, config)
         log.info("Custom classification from config: %s", classification)
-        if (not classification) and ('MR' in dcm.get("Modality")):
+        if not classification and dcm.get("Modality") == "MR":
             classification = classification_from_label.infer_classification(series_desc)
             log.info("Inferred classification from label: %s", classification)
             # GEAR-1084, keep any custom classification already set.
